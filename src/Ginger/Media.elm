@@ -7,6 +7,17 @@ module Ginger.Media exposing
     , url
     )
 
+{-|
+
+@docs ImageClass
+@docs Media
+@docs empty
+@docs fromJson
+@docs fromList
+@docs url
+
+-}
+
 import Dict exposing (Dict)
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
@@ -16,10 +27,12 @@ import Json.Decode.Pipeline as Pipeline
 -- DEFINITIONS
 
 
+{-| -}
 type Media
     = Media (Dict String String)
 
 
+{-| -}
 type ImageClass
     = Avatar
     | Thumbnail
@@ -33,6 +46,7 @@ type ImageClass
 -- DECODE
 
 
+{-| -}
 fromJson : Decode.Decoder Media
 fromJson =
     let
@@ -49,16 +63,19 @@ fromJson =
 -- OTHER
 
 
+{-| -}
 empty : Media
 empty =
     Media Dict.empty
 
 
+{-| -}
 fromList : List ( ImageClass, String ) -> Media
 fromList =
     Media << Dict.fromList << List.map (Tuple.mapFirst imageClassToString)
 
 
+{-| -}
 url : ImageClass -> Media -> Maybe String
 url imageClass (Media media) =
     Dict.get (imageClassToString imageClass) media

@@ -1,4 +1,16 @@
-module Ginger.Auth.Identity exposing (Identity, Type(..), fromJson)
+module Ginger.Auth.Identity exposing
+    ( Identity
+    , Type(..)
+    , fromJson
+    )
+
+{-|
+
+@docs Identity
+@docs Type
+@docs fromJson
+
+-}
 
 import Iso8601
 import Json.Decode as Decode
@@ -10,11 +22,13 @@ import Time
 -- DEFINITIONS
 
 
+{-| -}
 type Type
     = UsernamePassword
     | Unknown String
 
 
+{-| -}
 type alias Identity =
     { id : Int
     , resourceId : Int
@@ -32,6 +46,7 @@ type alias Identity =
 -- DECODERS
 
 
+{-| -}
 fromJson : Decode.Decoder Identity
 fromJson =
     Decode.succeed Identity

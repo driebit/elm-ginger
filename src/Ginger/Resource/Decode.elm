@@ -2,7 +2,7 @@ module Ginger.Resource.Decode exposing (fromJson)
 
 {-|
 
-@docs decodeList
+@docs fromJson
 
 -}
 

@@ -5,7 +5,14 @@ module Ginger.Auth exposing
     , statusFromResult
     )
 
-{-| -}
+{-|
+
+@docs Status
+@docs fromJson
+@docs requestAuthentication
+@docs statusFromResult
+
+-}
 
 import Ginger.Auth.Identity as Identity exposing (Identity)
 import Ginger.Resource exposing (Resource)
@@ -20,6 +27,7 @@ import Json.Encode as Encode
 -- DEFINITIONS
 
 
+{-| -}
 type Status
     = Authenticated Identity Resource
     | Anonymous
@@ -48,6 +56,7 @@ requestAuthentication username password =
 -- DECODERS
 
 
+{-| -}
 fromJson : Decode.Decoder Status
 fromJson =
     Decode.succeed Authenticated
@@ -59,6 +68,7 @@ fromJson =
 -- ERROR
 
 
+{-| -}
 statusFromResult : Result Http.Error Status -> Status
 statusFromResult result =
     case result of

@@ -5,7 +5,17 @@ module Ginger.Predicate exposing
     , toString
     )
 
+{-|
+
+@docs Predicate
+@docs fromJson
+@docs fromString
+@docs toString
+
+-}
+
 import Json.Decode as Decode
+import List.NonEmpty exposing (NonEmpty)
 
 
 
@@ -27,6 +37,7 @@ type Predicate
 -- DECODE
 
 
+{-| -}
 fromJson : Decode.Decoder Predicate
 fromJson =
     Decode.map fromString Decode.string

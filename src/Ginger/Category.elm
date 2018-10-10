@@ -5,6 +5,15 @@ module Ginger.Category exposing
     , toString
     )
 
+{-|
+
+@docs Category
+@docs fromJson
+@docs fromString
+@docs toString
+
+-}
+
 import Json.Decode as Decode
 import List.NonEmpty exposing (NonEmpty)
 
@@ -13,6 +22,7 @@ import List.NonEmpty exposing (NonEmpty)
 -- DEFINITIONS
 
 
+{-| -}
 type Category
     = Text
     | Person
@@ -37,6 +47,7 @@ type Category
 -- DECODE
 
 
+{-| -}
 fromJson : Decode.Decoder (NonEmpty Category)
 fromJson =
     Decode.map (List.NonEmpty.reverse << List.NonEmpty.map fromString) <|

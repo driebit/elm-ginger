@@ -6,6 +6,16 @@ module Ginger.Edge exposing
     , withPredicate
     )
 
+{-|
+
+@docs Edge
+@docs const
+@docs fromJson
+@docs unwrap
+@docs withPredicate
+
+-}
+
 import Ginger.Predicate as Predicate exposing (Predicate)
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline

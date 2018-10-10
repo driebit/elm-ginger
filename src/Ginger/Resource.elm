@@ -21,6 +21,7 @@ module Ginger.Resource exposing
 
 @docs category
 @docs edges
+@docs media
 
 -}
 
