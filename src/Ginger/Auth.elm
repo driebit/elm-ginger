@@ -39,7 +39,7 @@ import Json.Encode as Encode
 
 {-| -}
 type Status
-    = Authenticated Identity Resource
+    = Authenticated Identity (Maybe Resource)
     | Anonymous
     | Loading
     | Error String
@@ -71,7 +71,7 @@ fromJson : Decode.Decoder Status
 fromJson =
     Decode.succeed Authenticated
         |> Pipeline.required "identity" Identity.fromJson
-        |> Pipeline.required "resource" Ginger.Resource.fromJson
+        |> Pipeline.optional "resource" (Decode.maybe Ginger.Resource.fromJson) Nothing
 
 
 

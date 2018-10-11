@@ -35,12 +35,12 @@ import List.NonEmpty exposing (NonEmpty)
 
 {-| -}
 type Predicate
-    = About
-    | Author
-    | Depiction
+    = IsAbout
+    | HasAuthor
+    | HasDepiction
     | HasBanner
     | HasPart
-    | Relation
+    | HasRelation
     | Custom String
 
 
@@ -59,13 +59,13 @@ fromString : String -> Predicate
 fromString predicate =
     case predicate of
         "about" ->
-            About
+            IsAbout
 
         "author" ->
-            Author
+            HasAuthor
 
         "depiction" ->
-            Depiction
+            HasDepiction
 
         "hasbanner" ->
             HasBanner
@@ -74,7 +74,7 @@ fromString predicate =
             HasPart
 
         "relation" ->
-            Relation
+            HasRelation
 
         x ->
             Custom x
@@ -84,13 +84,13 @@ fromString predicate =
 toString : Predicate -> String
 toString predicate =
     case predicate of
-        About ->
+        IsAbout ->
             "about"
 
-        Author ->
+        HasAuthor ->
             "author"
 
-        Depiction ->
+        HasDepiction ->
             "depiction"
 
         HasBanner ->
@@ -99,7 +99,7 @@ toString predicate =
         HasPart ->
             "hasPart"
 
-        Relation ->
+        HasRelation ->
             "relation"
 
         Custom x ->

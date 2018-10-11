@@ -19,7 +19,7 @@ suite =
         [ test "Returns list of urls from edge with specific predicate" <|
             \_ ->
                 Expect.equal [ "http://image1.jpg", "http://image2.jpg" ] <|
-                    Resource.media Predicate.Depiction Media.Avatar (resource True "")
+                    Resource.media Predicate.HasDepiction Media.Avatar (resource True "")
         ]
 
 
@@ -29,8 +29,8 @@ resource withEdges imageUrl =
         edges =
             if withEdges then
                 Resource.Edges
-                    [ Edge.const Predicate.Depiction (resource False "http://image1.jpg")
-                    , Edge.const Predicate.Depiction (resource False "http://image2.jpg")
+                    [ Edge.wrap Predicate.HasDepiction (resource False "http://image1.jpg")
+                    , Edge.wrap Predicate.HasDepiction (resource False "http://image2.jpg")
                     ]
 
             else

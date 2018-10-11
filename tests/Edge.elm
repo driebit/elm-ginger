@@ -12,10 +12,10 @@ suite =
         [ test "Returns list of Int" <|
             \_ ->
                 Expect.equal [ 1 ] <|
-                    Edge.withPredicate Predicate.About <|
-                        List.map (\( x, y ) -> Edge.const x y)
-                            [ ( Predicate.About, 1 ), ( Predicate.Relation, 2 ) ]
+                    Edge.withPredicate Predicate.IsAbout <|
+                        List.map (\( x, y ) -> Edge.wrap x y)
+                            [ ( Predicate.IsAbout, 1 ), ( Predicate.HasRelation, 2 ) ]
         , test "Returns Int" <|
             \_ ->
-                Expect.equal 1 <| Edge.unwrap <| Edge.const Predicate.About 1
+                Expect.equal 1 <| Edge.unwrap <| Edge.wrap Predicate.IsAbout 1
         ]

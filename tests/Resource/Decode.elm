@@ -24,7 +24,7 @@ suite =
                 Expect.equal
                     resourceList
                     (Result.mapError Decode.errorToString <|
-                        Decode.decodeString Ginger.Resource.fromJson json
+                        Decode.decodeString Resource.fromJson json
                     )
         ]
 
@@ -107,7 +107,7 @@ resource withEdges posix =
         edges =
             if withEdges then
                 Resource.Edges
-                    [ Edge.const Predicate.About (resource False posix) ]
+                    [ Edge.wrap Predicate.IsAbout (resource False posix) ]
 
             else
                 Resource.NotFetched

@@ -42,8 +42,8 @@ import Json.Decode.Pipeline as Pipeline
 
 {-| A named connection to a resource
 -}
-type Edge resource
-    = Edge Predicate resource
+type Edge a
+    = Edge Predicate a
 
 
 

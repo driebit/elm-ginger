@@ -13,7 +13,6 @@ import Json.Decode as Decode
 
 
 
--- TODO: Implements tests
 -- DEFINITION
 
 

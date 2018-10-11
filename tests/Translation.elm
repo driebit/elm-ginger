@@ -11,25 +11,13 @@ suite =
         [ test "Returns a translated string" <|
             \_ ->
                 Expect.equal "Hello" <|
-                    Translation.toString EN translationA
-        , test "Apply a function to all translated values" <|
-            \_ ->
-                Expect.equal translationB <|
-                    Translation.map (\x -> x ++ "!") translationA
+                    Translation.toString EN translation
         ]
 
 
-translationA : Translation
-translationA =
+translation : Translation
+translation =
     Translation.fromList
         [ ( NL, "Hallo" )
         , ( EN, "Hello" )
-        ]
-
-
-translationB : Translation
-translationB =
-    Translation.fromList
-        [ ( NL, "Hallo!" )
-        , ( EN, "Hello!" )
         ]

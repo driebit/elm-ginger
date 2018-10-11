@@ -3,7 +3,6 @@ module Ginger.Translation exposing
     , Language(..)
     , toString
     , fromList
-    , map
     , text
     , html
     , fromJson
@@ -22,7 +21,6 @@ module Ginger.Translation exposing
 
 @docs toString
 @docs fromList
-@docs map
 
 
 # Html
@@ -67,13 +65,6 @@ toString : Language -> Translation -> String
 toString language (Translation translation) =
     Maybe.withDefault "" <|
         Dict.get (toIso639 language) translation
-
-
-{-| -}
-map : (String -> String) -> Translation -> Translation
-map fn (Translation translation) =
-    Translation <|
-        Dict.map (\_ value -> fn value) translation
 
 
 {-| -}
