@@ -1,24 +1,39 @@
 module Ginger.Translation exposing
-    ( Language(..)
-    , Translation
-    , fromJson
+    ( Translation
+    , Language(..)
+    , toString
     , fromList
-    , html
     , map
     , text
-    , toString
+    , html
+    , fromJson
     )
 
 {-|
 
-@docs Language
+
+# Definitions
+
 @docs Translation
-@docs fromJson
-@docs fromList
-@docs html
-@docs map
-@docs text
+@docs Language
+
+
+# Conversion
+
 @docs toString
+@docs fromList
+@docs map
+
+
+# Html
+
+@docs text
+@docs html
+
+
+# Decode
+
+@docs fromJson
 
 -}
 
@@ -41,17 +56,6 @@ type Translation
 type Language
     = NL
     | EN
-
-
-
--- DECODE
-
-
-{-| -}
-fromJson : Decode.Decoder Translation
-fromJson =
-    Decode.map Translation <|
-        Decode.dict Decode.string
 
 
 
@@ -107,3 +111,14 @@ toIso639 language =
 
         NL ->
             "nl"
+
+
+
+-- DECODE
+
+
+{-| -}
+fromJson : Decode.Decoder Translation
+fromJson =
+    Decode.map Translation <|
+        Decode.dict Decode.string

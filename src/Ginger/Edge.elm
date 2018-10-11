@@ -1,18 +1,33 @@
 module Ginger.Edge exposing
     ( Edge
-    , const
-    , fromJson
+    , wrap
     , unwrap
     , withPredicate
+    , fromJson
     )
 
 {-|
 
+
+# Definition
+
 @docs Edge
-@docs const
-@docs fromJson
+
+
+# Wrapping
+
+@docs wrap
 @docs unwrap
+
+
+# Query
+
 @docs withPredicate
+
+
+# Decode
+
+@docs fromJson
 
 -}
 
@@ -21,33 +36,36 @@ import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
 
 
+
+-- DEFINITIONS
+
+
 {-| A named connection to a resource
 -}
 type Edge resource
     = Edge Predicate resource
 
 
-{-| Decode an edge from a Ginger.Rest response
--}
-fromJson : Decode.Decoder resource -> Decode.Decoder (Edge resource)
-fromJson decoder =
-    Decode.succeed Edge
-        |> Pipeline.required "predicate_name" Predicate.fromJson
-        |> Pipeline.custom decoder
+
+-- WRAPPING
 
 
-{-| Construct Edge from a Ginger.Predicate and resource
+{-| Construct an Edge from a Ginger.Predicate and resource
 -}
-const : Predicate -> resource -> Edge resource
-const =
+wrap : Predicate -> resource -> Edge resource
+wrap =
     Edge
 
 
-{-| Get `resource` wrapped in the Edge type
+{-| Get the `resource` wrapped in the Edge type
 -}
 unwrap : Edge resource -> resource
 unwrap (Edge _ resource) =
     resource
+
+
+
+-- QUERY
 
 
 {-| Get all `resource` with a predicate
@@ -63,3 +81,16 @@ withPredicate predicate edges =
                 Nothing
     in
     List.filterMap filter edges
+
+
+
+-- DECODE
+
+
+{-| Decode an edge from a Ginger.Rest response
+-}
+fromJson : Decode.Decoder resource -> Decode.Decoder (Edge resource)
+fromJson decoder =
+    Decode.succeed Edge
+        |> Pipeline.required "predicate_name" Predicate.fromJson
+        |> Pipeline.custom decoder

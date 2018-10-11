@@ -1,16 +1,27 @@
 module Ginger.Category exposing
     ( Category(..)
-    , fromJson
-    , fromString
     , toString
+    , fromString
+    , fromJson
     )
 
 {-|
 
+
+# Definition
+
 @docs Category
-@docs fromJson
-@docs fromString
+
+
+# Conversions
+
 @docs toString
+@docs fromString
+
+
+# Decode
+
+@docs fromJson
 
 -}
 
@@ -24,22 +35,22 @@ import List.NonEmpty exposing (NonEmpty)
 
 {-| -}
 type Category
-    = Text
-    | Person
-    | Location
-    | Website
-    | Event
-    | Artifact
-    | Media
-    | Image
-    | Video
-    | Audio
-    | Document
-    | Collection
-    | Meta
-    | Agenda
+    = Agenda
     | Article
+    | Artifact
+    | Audio
+    | Collection
+    | Document
+    | Event
+    | Image
+    | Location
+    | Media
+    | Meta
     | News
+    | Person
+    | Text
+    | Video
+    | Website
     | Custom String
 
 

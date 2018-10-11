@@ -12,7 +12,7 @@ module Ginger.Rest exposing
 {-|
 
 
-# Requests
+# Http
 
     import Ginger.Resource exposing (Resource)
     import Ginger.Rest exposing (requestResources)
@@ -27,7 +27,7 @@ module Ginger.Rest exposing
 @docs requestResources
 
 
-# Query Parameters
+# Query parameters
 
     import Ginger.Resource exposing (Category, Resource)
     import Ginger.Rest exposing (requestResources)
@@ -44,6 +44,7 @@ module Ginger.Rest exposing
 @docs hasCategory
 @docs hasObjectId
 @docs hasObjectName
+
 @docs hasSubjectId
 @docs hasSubjectName
 
@@ -51,7 +52,6 @@ module Ginger.Rest exposing
 
 import Ginger.Category as Category exposing (Category)
 import Ginger.Resource as Resource exposing (Resource)
-import Ginger.Resource.Decode
 import Http
 import Json.Decode as Decode
 import Url
@@ -81,7 +81,7 @@ absolute path queryParams =
 requestResources : List Url.Builder.QueryParameter -> Http.Request (List Resource)
 requestResources queryParams =
     Http.get (absolute [] queryParams)
-        (Decode.list Ginger.Resource.Decode.fromJson)
+        (Decode.list Resource.fromJson)
 
 
 {-|
@@ -93,7 +93,7 @@ requestResources queryParams =
 -}
 requestResourceById : Int -> Http.Request Resource
 requestResourceById id =
-    Http.get (absolute [ String.fromInt id ] []) Ginger.Resource.Decode.fromJson
+    Http.get (absolute [ String.fromInt id ] []) Resource.fromJson
 
 
 {-|
@@ -105,7 +105,7 @@ requestResourceById id =
 -}
 requestResourceByPath : String -> Http.Request Resource
 requestResourceByPath path =
-    Http.get (absolute [ "path", path ] []) Ginger.Resource.Decode.fromJson
+    Http.get (absolute [ "path", path ] []) Resource.fromJson
 
 
 

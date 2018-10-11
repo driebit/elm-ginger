@@ -1,16 +1,27 @@
 module Ginger.Predicate exposing
     ( Predicate(..)
-    , fromJson
     , fromString
     , toString
+    , fromJson
     )
 
 {-|
 
+
+# Definition
+
 @docs Predicate
-@docs fromJson
+
+
+# Conversions
+
 @docs fromString
 @docs toString
+
+
+# Decode
+
+@docs fromJson
 
 -}
 

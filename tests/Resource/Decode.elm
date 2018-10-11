@@ -7,7 +7,6 @@ import Ginger.Edge as Edge exposing (Edge)
 import Ginger.Media as Media exposing (Media)
 import Ginger.Predicate as Predicate exposing (Predicate(..))
 import Ginger.Resource as Resource exposing (Resource)
-import Ginger.Resource.Decode
 import Ginger.Translation as Translation exposing (Language(..))
 import Iso8601
 import Json.Decode as Decode
@@ -25,7 +24,7 @@ suite =
                 Expect.equal
                     resourceList
                     (Result.mapError Decode.errorToString <|
-                        Decode.decodeString Ginger.Resource.Decode.fromJson json
+                        Decode.decodeString Ginger.Resource.fromJson json
                     )
         ]
 

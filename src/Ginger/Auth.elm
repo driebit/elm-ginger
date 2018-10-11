@@ -1,22 +1,32 @@
 module Ginger.Auth exposing
     ( Status(..)
-    , fromJson
     , requestAuthentication
     , statusFromResult
+    , fromJson
     )
 
 {-|
 
+
+# Definitions
+
 @docs Status
-@docs fromJson
+
+
+# Http
+
 @docs requestAuthentication
 @docs statusFromResult
+
+
+# Decode
+
+@docs fromJson
 
 -}
 
 import Ginger.Auth.Identity as Identity exposing (Identity)
 import Ginger.Resource exposing (Resource)
-import Ginger.Resource.Decode
 import Http
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
@@ -61,7 +71,7 @@ fromJson : Decode.Decoder Status
 fromJson =
     Decode.succeed Authenticated
         |> Pipeline.required "identity" Identity.fromJson
-        |> Pipeline.required "resource" Ginger.Resource.Decode.fromJson
+        |> Pipeline.required "resource" Ginger.Resource.fromJson
 
 
 

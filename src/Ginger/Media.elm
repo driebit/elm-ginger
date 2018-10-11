@@ -1,20 +1,35 @@
 module Ginger.Media exposing
-    ( ImageClass(..)
-    , Media
+    ( Media
+    , ImageClass(..)
     , empty
-    , fromJson
     , fromList
     , url
+    , fromJson
     )
 
 {-|
 
-@docs ImageClass
+
+# Definitions
+
 @docs Media
+@docs ImageClass
+
+
+# -
+
 @docs empty
-@docs fromJson
 @docs fromList
+
+
+# Query
+
 @docs url
+
+
+# Decode
+
+@docs fromJson
 
 -}
 
