@@ -1,6 +1,7 @@
 module Ginger.Auth exposing
     ( Status(..)
     , requestAuthentication
+    , requestStatus
     , statusFromResult
     , fromJson
     )
@@ -16,6 +17,7 @@ module Ginger.Auth exposing
 # Http
 
 @docs requestAuthentication
+@docs requestStatus
 @docs statusFromResult
 
 
@@ -60,6 +62,12 @@ requestAuthentication username password =
                 ]
     in
     Http.post "/data/auth" (Http.jsonBody body) fromJson
+
+
+{-| -}
+requestStatus : Http.Request Status
+requestStatus =
+    Http.get "/data/auth" fromJson
 
 
 
