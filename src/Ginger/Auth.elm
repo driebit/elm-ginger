@@ -2,8 +2,10 @@ module Ginger.Auth exposing
     ( Status(..)
     , requestAuthentication
     , requestStatus
-    , statusFromResult
+    , fromResult
     , fromJson
+    , isAuthenticated
+    , requestLogout, requestReset, requestSignup
     )
 
 {-|
@@ -18,12 +20,13 @@ module Ginger.Auth exposing
 
 @docs requestAuthentication
 @docs requestStatus
-@docs statusFromResult
+@docs fromResult
 
 
 # Decode
 
 @docs fromJson
+@docs isAuthenticated
 
 -}
 
@@ -44,7 +47,7 @@ type Status
     = Authenticated Identity (Maybe Resource)
     | Anonymous
     | Loading
-    | Error String
+    | Error Http.Error
 
 
 
@@ -52,8 +55,8 @@ type Status
 
 
 {-| -}
-requestAuthentication : String -> String -> Http.Request Status
-requestAuthentication username password =
+requestAuthentication : (Result Http.Error Status -> msg) -> String -> String -> Cmd msg
+requestAuthentication msg username password =
     let
         body =
             Encode.object
@@ -61,13 +64,62 @@ requestAuthentication username password =
                 , ( "password", Encode.string password )
                 ]
     in
-    Http.post "/data/auth" (Http.jsonBody body) fromJson
+    Http.post
+        { url = "/data/auth/login"
+        , body = Http.jsonBody body
+        , expect = Http.expectJson msg fromJson
+        }
 
 
 {-| -}
-requestStatus : Http.Request Status
-requestStatus =
-    Http.get "/data/auth" fromJson
+requestSignup : (Result Http.Error () -> msg) -> String -> String -> Cmd msg
+requestSignup msg username password =
+    let
+        body =
+            Encode.object
+                [ ( "email", Encode.string username )
+                , ( "password", Encode.string password )
+                ]
+    in
+    Http.post
+        { url = "/data/auth/new"
+        , body = Http.jsonBody body
+        , expect = Http.expectWhatever msg
+        }
+
+
+{-| -}
+requestReset : (Result Http.Error () -> msg) -> String -> Cmd msg
+requestReset msg username =
+    let
+        body =
+            Encode.object
+                [ ( "email", Encode.string username ) ]
+    in
+    Http.post
+        { url = "/data/auth/reset"
+        , body = Http.jsonBody body
+        , expect = Http.expectWhatever msg
+        }
+
+
+{-| -}
+requestStatus : (Result Http.Error Status -> msg) -> Cmd msg
+requestStatus msg =
+    Http.get
+        { url = "/data/auth/status"
+        , expect = Http.expectJson msg fromJson
+        }
+
+
+{-| -}
+requestLogout : (Result Http.Error () -> msg) -> Cmd msg
+requestLogout msg =
+    Http.post
+        { url = "/data/auth/logout"
+        , body = Http.emptyBody
+        , expect = Http.expectWhatever msg
+        }
 
 
 
@@ -87,14 +139,25 @@ fromJson =
 
 
 {-| -}
-statusFromResult : Result Http.Error Status -> Status
-statusFromResult result =
+fromResult : Result Http.Error Status -> Status
+fromResult result =
     case result of
         Ok status ->
             status
 
-        Err (Http.BadStatus { body }) ->
-            Error body
+        Err err ->
+            Error err
+
+
+
+-- HELPERS
+
+
+isAuthenticated : Status -> Bool
+isAuthenticated status =
+    case status of
+        Authenticated _ _ ->
+            True
 
         _ ->
-            Error "Http error"
+            False

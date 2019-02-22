@@ -7,6 +7,8 @@ module Ginger.Rest exposing
     , hasObjectName
     , hasSubjectId
     , hasSubjectName
+    , sortBy
+    , SortDirection(..), SortField(..)
     )
 
 {-|
@@ -47,6 +49,7 @@ module Ginger.Rest exposing
 
 @docs hasSubjectId
 @docs hasSubjectName
+@docs sortBy
 
 -}
 
@@ -54,6 +57,7 @@ import Ginger.Category as Category exposing (Category)
 import Ginger.Resource as Resource exposing (Resource)
 import Http
 import Json.Decode as Decode
+import String.Interpolate exposing (interpolate)
 import Url
 import Url.Builder
 
@@ -78,10 +82,12 @@ absolute path queryParams =
         requestResources []
 
 -}
-requestResources : List Url.Builder.QueryParameter -> Http.Request (List Resource)
-requestResources queryParams =
-    Http.get (absolute [] queryParams)
-        (Decode.list Resource.fromJson)
+requestResources : List Url.Builder.QueryParameter -> (Result Http.Error (List Resource) -> msg) -> Cmd msg
+requestResources queryParams msg =
+    Http.get
+        { url = absolute [] queryParams
+        , expect = Http.expectJson msg (Decode.list Resource.fromJson)
+        }
 
 
 {-|
@@ -91,9 +97,12 @@ requestResources queryParams =
         requestResourceById 242
 
 -}
-requestResourceById : Int -> Http.Request Resource
-requestResourceById id =
-    Http.get (absolute [ String.fromInt id ] []) Resource.fromJson
+requestResourceById : Int -> (Result Http.Error Resource -> msg) -> Cmd msg
+requestResourceById id msg =
+    Http.get
+        { url = absolute [ String.fromInt id ] []
+        , expect = Http.expectJson msg Resource.fromJson
+        }
 
 
 {-|
@@ -103,9 +112,12 @@ requestResourceById id =
         requestResourceByPath "/news"
 
 -}
-requestResourceByPath : String -> Http.Request Resource
-requestResourceByPath path =
-    Http.get (absolute [ "path", path ] []) Resource.fromJson
+requestResourceByPath : String -> (Result Http.Error Resource -> msg) -> Cmd msg
+requestResourceByPath path msg =
+    Http.get
+        { url = absolute [ "path", Url.percentEncode path ] []
+        , expect = Http.expectJson msg Resource.fromJson
+        }
 
 
 
@@ -153,7 +165,7 @@ hasObjectName =
 
     request : Http.Request Http.Error (List Resource)
     request =
-        requestResources [ hasObjectId 42 ]
+        requestResources [ hasSubjectId 42 ]
 
 -}
 hasSubjectId : Int -> Url.Builder.QueryParameter
@@ -165,9 +177,50 @@ hasSubjectId =
 
     request : Http.Request Http.Error (List Resource)
     request =
-        requestResources [ hasObjectId "region" ]
+        requestResources [ hasSubjectName "region" ]
+            requestResources
+            [ HasSubjectName "region" ]
 
 -}
 hasSubjectName : String -> Url.Builder.QueryParameter
 hasSubjectName =
     Url.Builder.string "hassubject"
+
+
+{-|
+
+    request : Http.Request Http.Error (List Resource)
+    request =
+        requestResources [ sortBy "+rsc.id" ]
+
+-}
+sortBy : SortField -> SortDirection -> Url.Builder.QueryParameter
+sortBy field direction =
+    let
+        format =
+            case direction of
+                Asc ->
+                    "+rsc.{0}"
+
+                Desc ->
+                    "-rsc.{0}"
+
+        field_ =
+            case field of
+                PublicationDate ->
+                    "publication_start"
+
+                StartDate ->
+                    "date_start"
+    in
+    Url.Builder.string "sort" <| interpolate format [ field_ ]
+
+
+type SortDirection
+    = Asc
+    | Desc
+
+
+type SortField
+    = PublicationDate
+    | StartDate

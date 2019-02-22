@@ -5,7 +5,10 @@ module Ginger.Resource exposing
     , category
     , edges
     , media
+    , depiction
+    , id
     , fromJson
+    , Block, edgesWithPredicate
     )
 
 {-|
@@ -23,6 +26,8 @@ module Ginger.Resource exposing
 @docs category
 @docs edges
 @docs media
+@docs depiction
+@docs id
 
 
 # Decode
@@ -31,7 +36,6 @@ module Ginger.Resource exposing
 
 -}
 
-import Dict exposing (Dict)
 import Ginger.Category as Category exposing (Category(..))
 import Ginger.Edge as Edge exposing (Edge)
 import Ginger.Media as Media exposing (Media)
@@ -62,9 +66,16 @@ type alias Resource =
     , path : String
     , category : NonEmpty Category
     , properties : Decode.Value
-    , publicationDate : Time.Posix
+    , publicationDate : Maybe Time.Posix
     , edges : Edges
     , media : Media
+    , blocks : List Block
+    }
+
+
+type alias Block =
+    { body : Translation
+    , name : String
     }
 
 
@@ -78,15 +89,26 @@ type Edges
 -- QUERY
 
 
+id : Id -> Int
+id (Id x) =
+    x
+
+
 {-| -}
-edges : Resource -> Maybe (List Resource)
+edges : Resource -> Maybe (List (Edge Resource))
 edges resource =
     case resource.edges of
         NotFetched ->
             Nothing
 
         Edges xs ->
-            Just (List.map Edge.unwrap xs)
+            Just xs
+
+
+{-| -}
+edgesWithPredicate : Predicate -> Resource -> Maybe (List Resource)
+edgesWithPredicate predicate resource =
+    Maybe.map (Edge.withPredicate predicate) (edges resource)
 
 
 {-| -}
@@ -105,6 +127,12 @@ media predicate imageClass resource =
 
         NotFetched ->
             []
+
+
+depiction : Media.ImageClass -> Resource -> Maybe String
+depiction imageClass resource =
+    List.head <|
+        media Predicate.HasDepiction imageClass resource
 
 
 
@@ -139,9 +167,10 @@ decode includeEdges =
         |> Pipeline.required "path" Decode.string
         |> Pipeline.required "categories" Category.fromJson
         |> Pipeline.required "properties" Decode.value
-        |> Pipeline.required "publication_date" Iso8601.decoder
+        |> Pipeline.required "publication_date" (Decode.maybe Iso8601.decoder)
         |> Pipeline.optional "edges" edgesDecoder NotFetched
         |> Pipeline.optional "media" Media.fromJson Media.empty
+        |> Pipeline.required "blocks" (Decode.list decodeBlock)
 
 
 decodeEdges : Decode.Decoder Edges
@@ -153,3 +182,10 @@ decodeEdges =
 decodeEdgeResource : Decode.Decoder Resource
 decodeEdgeResource =
     Decode.field "resource" (decode False)
+
+
+decodeBlock : Decode.Decoder Block
+decodeBlock =
+    Decode.succeed Block
+        |> Pipeline.required "body" Translation.fromJson
+        |> Pipeline.required "name" Decode.string

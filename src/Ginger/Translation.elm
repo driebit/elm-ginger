@@ -6,6 +6,7 @@ module Ginger.Translation exposing
     , text
     , html
     , fromJson
+    , toIso639
     )
 
 {-|

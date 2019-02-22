@@ -26,7 +26,6 @@ module Ginger.Predicate exposing
 -}
 
 import Json.Decode as Decode
-import List.NonEmpty exposing (NonEmpty)
 
 
 
@@ -38,6 +37,7 @@ type Predicate
     = IsAbout
     | HasAuthor
     | HasDepiction
+    | HasDocument
     | HasBanner
     | HasPart
     | HasRelation
@@ -70,6 +70,9 @@ fromString predicate =
         "hasbanner" ->
             HasBanner
 
+        "hasdocument" ->
+            HasDocument
+
         "haspart" ->
             HasPart
 
@@ -92,6 +95,9 @@ toString predicate =
 
         HasDepiction ->
             "depiction"
+
+        HasDocument ->
+            "hasdocument"
 
         HasBanner ->
             "hasBanner"

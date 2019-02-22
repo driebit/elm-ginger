@@ -5,6 +5,7 @@ module Ginger.Media exposing
     , fromList
     , url
     , fromJson
+    , imageClassToString
     )
 
 {-|
@@ -51,9 +52,11 @@ type Media
 type ImageClass
     = Avatar
     | Thumbnail
+    | Card
     | Small
     | Medium
     | Large
+    | Cinemascope
     | Custom String
 
 
@@ -96,6 +99,7 @@ url imageClass (Media media) =
     Dict.get (imageClassToString imageClass) media
 
 
+{-| -}
 imageClassToString : ImageClass -> String
 imageClassToString imageClass =
     case imageClass of
@@ -105,6 +109,9 @@ imageClassToString imageClass =
         Thumbnail ->
             "thumbnail"
 
+        Card ->
+            "card"
+
         Small ->
             "small"
 
@@ -113,6 +120,9 @@ imageClassToString imageClass =
 
         Large ->
             "large"
+
+        Cinemascope ->
+            "cinemascope"
 
         Custom custom ->
             custom

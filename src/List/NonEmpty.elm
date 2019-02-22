@@ -52,7 +52,7 @@ map func (NonEmpty x xs) =
 reverse : NonEmpty a -> NonEmpty a
 reverse ((NonEmpty x xs) as nonEmpty) =
     case ( x, List.reverse xs ) of
-        ( a, [] ) ->
+        ( _, [] ) ->
             nonEmpty
 
         ( a, b :: rest ) ->
