@@ -3,8 +3,8 @@ module Ginger.Media exposing
     , ImageClass(..)
     , empty
     , url
-    , fromJson
     , imageClassToString
+    , fromJson
     )
 
 {-|
@@ -16,15 +16,11 @@ module Ginger.Media exposing
 @docs ImageClass
 
 
-# -
+# Build & Query
 
 @docs empty
-@docs fromList
-
-
-# Query
-
 @docs url
+@docs imageClassToString
 
 
 # Decode

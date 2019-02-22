@@ -6,8 +6,8 @@ module Ginger.Resource exposing
     , edges
     , media
     , depiction
-    , fromJson
     , edgesWithPredicate
+    , fromJson
     )
 
 {-|
@@ -26,6 +26,7 @@ module Ginger.Resource exposing
 @docs edges
 @docs media
 @docs depiction
+@docs edgesWithPredicate
 
 
 # Decode

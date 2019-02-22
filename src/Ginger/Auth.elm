@@ -1,11 +1,12 @@
 module Ginger.Auth exposing
     ( Status(..)
-    , requestAuthentication
+    , requestLogin
+    , requestLogout
+    , requestSignup
     , requestStatus
+    , requestReset
     , fromResult
     , fromJson
-    , isAuthenticated
-    , requestLogout, requestReset, requestSignup
     )
 
 {-|
@@ -18,15 +19,18 @@ module Ginger.Auth exposing
 
 # Http
 
-@docs requestAuthentication
+@docs requestLogin
+@docs requestLogout
+@docs requestSignup
 @docs requestStatus
+@docs requestReset
+
 @docs fromResult
 
 
 # Decode
 
 @docs fromJson
-@docs isAuthenticated
 
 -}
 
@@ -55,8 +59,8 @@ type Status
 
 
 {-| -}
-requestAuthentication : (Result Http.Error Status -> msg) -> String -> String -> Cmd msg
-requestAuthentication msg username password =
+requestLogin : (Result Http.Error Status -> msg) -> String -> String -> Cmd msg
+requestLogin msg username password =
     let
         body =
             Encode.object
@@ -147,17 +151,3 @@ fromResult result =
 
         Err err ->
             Error err
-
-
-
--- HELPERS
-
-
-isAuthenticated : Status -> Bool
-isAuthenticated status =
-    case status of
-        Authenticated _ _ ->
-            True
-
-        _ ->
-            False

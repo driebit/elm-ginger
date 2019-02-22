@@ -3,10 +3,10 @@ module Ginger.Translation exposing
     , Language(..)
     , toString
     , fromList
+    , toIso639
     , text
     , html
     , fromJson
-    , toIso639
     )
 
 {-|
@@ -22,6 +22,7 @@ module Ginger.Translation exposing
 
 @docs toString
 @docs fromList
+@docs toIso639
 
 
 # Html
@@ -55,46 +56,33 @@ type Translation
 type Language
     = NL
     | EN
+    | ZH
 
 
 
 -- CONVERSIONS
 
 
-{-| -}
+{-| Get the translated String value.
+
+_Defaults to an empty String._
+
+-}
 toString : Language -> Translation -> String
 toString language (Translation translation) =
     Maybe.withDefault "" <|
         Dict.get (toIso639 language) translation
 
 
-{-| -}
+{-| Construct a Translation from a list of Language and String value pairs
+-}
 fromList : List ( Language, String ) -> Translation
 fromList =
     Translation << Dict.fromList << List.map (Tuple.mapFirst toIso639)
 
 
-
--- HTML
-
-
-{-| -}
-text : Language -> Translation -> Html msg
-text language translation =
-    Html.text (toString language translation)
-
-
-{-| -}
-html : Language -> Translation -> Html msg
-html language translation =
-    Markdown.toHtmlWith { defaultOptions | sanitize = False } [] <|
-        toString language translation
-
-
-
--- LANGUAGE
-
-
+{-| Convert a Language to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) String
+-}
 toIso639 : Language -> String
 toIso639 language =
     case language of
@@ -103,6 +91,28 @@ toIso639 language =
 
         NL ->
             "nl"
+
+        ZH ->
+            "zh"
+
+
+
+-- HTML
+
+
+{-| Translate and render as Html text
+-}
+text : Language -> Translation -> Html msg
+text language translation =
+    Html.text (toString language translation)
+
+
+{-| Translate and render as Html markup
+-}
+html : Language -> Translation -> Html msg
+html language translation =
+    Markdown.toHtmlWith { defaultOptions | sanitize = False } [] <|
+        toString language translation
 
 
 

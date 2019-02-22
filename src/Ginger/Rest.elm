@@ -7,8 +7,9 @@ module Ginger.Rest exposing
     , hasObjectName
     , hasSubjectId
     , hasSubjectName
+    , SortDirection(..)
+    , SortField(..)
     , sortBy
-    , SortDirection(..), SortField(..)
     )
 
 {-|
@@ -49,6 +50,8 @@ module Ginger.Rest exposing
 
 @docs hasSubjectId
 @docs hasSubjectName
+@docs SortDirection
+@docs SortField
 @docs sortBy
 
 -}
@@ -57,7 +60,6 @@ import Ginger.Category as Category exposing (Category)
 import Ginger.Resource as Resource exposing (Resource)
 import Http
 import Json.Decode as Decode
-import String.Interpolate exposing (interpolate)
 import Url
 import Url.Builder
 
@@ -200,10 +202,10 @@ sortBy field direction =
         format =
             case direction of
                 Asc ->
-                    "+rsc.{0}"
+                    "+rsc."
 
                 Desc ->
-                    "-rsc.{0}"
+                    "-rsc."
 
         field_ =
             case field of
@@ -213,14 +215,16 @@ sortBy field direction =
                 StartDate ->
                     "date_start"
     in
-    Url.Builder.string "sort" <| interpolate format [ field_ ]
+    Url.Builder.string "sort" (format ++ field_)
 
 
+{-| -}
 type SortDirection
     = Asc
     | Desc
 
 
+{-| -}
 type SortField
     = PublicationDate
     | StartDate

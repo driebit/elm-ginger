@@ -1,7 +1,7 @@
 module Ginger.Predicate exposing
     ( Predicate(..)
-    , fromString
     , toString
+    , fromString
     , fromJson
     )
 
@@ -15,8 +15,8 @@ module Ginger.Predicate exposing
 
 # Conversions
 
-@docs fromString
 @docs toString
+@docs fromString
 
 
 # Decode

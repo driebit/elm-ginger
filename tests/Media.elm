@@ -11,12 +11,13 @@ import Test exposing (..)
 suite : Test
 suite =
     describe "The Ginger Media module"
-        [ test "Get url of media with imageclass" <|
-            \_ ->
-                Expect.equal (Just "http://image.jpg") <|
-                    Media.url Media.Small <|
-                        Media.fromList [ ( Media.Small, "http://image.jpg" ) ]
-        , test "Decode Json string in to Media type" <|
+        -- [ test "Get url of media with imageclass" <|
+        --     \_ ->
+        --         Expect.equal (Just "http://image.jpg") <|
+        --             Media.url Media.Small <|
+        Media.fromList
+        [ ( Media.Small, "http://image.jpg" ) ]
+        [ test "Decode Json string in to Media type" <|
             \_ ->
                 Expect.equal
                     media
