@@ -45,9 +45,5 @@ resource withEdges imageUrl =
     , category = NonEmpty.fromList Category.Text []
     , properties = Encode.null
     , edges = edges
-    , media =
-        Media.fromList
-            [ ( Media.Avatar, imageUrl )
-            , ( Media.Small, "http://image3.jpg" )
-            ]
+    , media = Media.empty
     }

@@ -1,14 +1,13 @@
 module Ginger.Resource exposing
     ( Resource
-    , Id(..)
     , Edges(..)
+    , Block
     , category
     , edges
     , media
     , depiction
-    , id
     , fromJson
-    , Block, edgesWithPredicate
+    , edgesWithPredicate
     )
 
 {-|
@@ -17,8 +16,8 @@ module Ginger.Resource exposing
 # Definitions
 
 @docs Resource
-@docs Id
 @docs Edges
+@docs Block
 
 
 # Query
@@ -27,7 +26,6 @@ module Ginger.Resource exposing
 @docs edges
 @docs media
 @docs depiction
-@docs id
 
 
 # Decode
@@ -38,6 +36,7 @@ module Ginger.Resource exposing
 
 import Ginger.Category as Category exposing (Category(..))
 import Ginger.Edge as Edge exposing (Edge)
+import Ginger.Id as Id exposing (Id)
 import Ginger.Media as Media exposing (Media)
 import Ginger.Predicate as Predicate exposing (Predicate(..))
 import Ginger.Translation as Translation exposing (Translation)
@@ -50,11 +49,6 @@ import Time
 
 
 -- DEFINITIONS
-
-
-{-| -}
-type Id
-    = Id Int
 
 
 {-| -}
@@ -73,6 +67,7 @@ type alias Resource =
     }
 
 
+{-| -}
 type alias Block =
     { body : Translation
     , name : String
@@ -87,11 +82,6 @@ type Edges
 
 
 -- QUERY
-
-
-id : Id -> Int
-id (Id x) =
-    x
 
 
 {-| -}
@@ -129,6 +119,7 @@ media predicate imageClass resource =
             []
 
 
+{-| -}
 depiction : Media.ImageClass -> Resource -> Maybe String
 depiction imageClass resource =
     List.head <|
@@ -160,7 +151,7 @@ decode includeEdges =
                 Decode.succeed NotFetched
     in
     Decode.succeed Resource
-        |> Pipeline.required "id" (Decode.map Id Decode.int)
+        |> Pipeline.required "id" Id.fromJson
         |> Pipeline.required "title" Translation.fromJson
         |> Pipeline.required "body" Translation.fromJson
         |> Pipeline.required "summary" Translation.fromJson
