@@ -28,9 +28,13 @@ module Ginger.Search exposing
             ]
 
 @docs request
+
 @docs QueryParam
+
 @docs Ordering
 @docs SortField
+
+@docs queryParamsToBuilder
 
 -}
 

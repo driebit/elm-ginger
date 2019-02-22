@@ -1,6 +1,6 @@
 module Ginger.Media exposing
     ( Media
-    , ImageClass(..)
+    , MediaClass(..)
     , empty
     , url
     , imageClassToString
@@ -13,7 +13,7 @@ module Ginger.Media exposing
 # Definitions
 
 @docs Media
-@docs ImageClass
+@docs MediaClass
 
 
 # Build & Query
@@ -44,7 +44,7 @@ type Media
 
 
 {-| -}
-type ImageClass
+type MediaClass
     = Avatar
     | Thumbnail
     | Card
@@ -83,13 +83,13 @@ empty =
 
 
 {-| -}
-url : ImageClass -> Media -> Maybe String
+url : MediaClass -> Media -> Maybe String
 url imageClass (Media media) =
     Dict.get (imageClassToString imageClass) media
 
 
 {-| -}
-imageClassToString : ImageClass -> String
+imageClassToString : MediaClass -> String
 imageClassToString imageClass =
     case imageClass of
         Avatar ->

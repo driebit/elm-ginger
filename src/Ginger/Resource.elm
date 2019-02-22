@@ -126,14 +126,14 @@ category =
 
 
 {-| -}
-media : Predicate -> Media.ImageClass -> Resource -> Maybe (List String)
+media : Predicate -> Media.MediaClass -> Resource -> Maybe (List String)
 media predicate imageClass resource =
     Maybe.map (List.filterMap (Media.url imageClass << .media)) <|
         edgesWithPredicate predicate resource
 
 
 {-| -}
-depiction : Media.ImageClass -> Resource -> Maybe String
+depiction : Media.MediaClass -> Resource -> Maybe String
 depiction imageClass resource =
     Maybe.andThen List.head <|
         media Predicate.HasDepiction imageClass resource

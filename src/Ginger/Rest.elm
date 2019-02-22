@@ -37,6 +37,8 @@ module Ginger.Rest exposing
 @docs Ordering
 @docs SortField
 
+@docs queryParamsToBuilder
+
 -}
 
 import Ginger.Category as Category exposing (Category)
