@@ -5,7 +5,7 @@ module Ginger.Search exposing
     , Ordering(..)
     , SortField(..)
     , queryParamsToBuilder
-    , requestLocations
+    , Operator(..), requestLocations
     )
 
 {-|
