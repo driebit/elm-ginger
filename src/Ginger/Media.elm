@@ -2,7 +2,6 @@ module Ginger.Media exposing
     ( Media
     , ImageClass(..)
     , empty
-    , fromList
     , url
     , fromJson
     , imageClassToString
@@ -85,12 +84,6 @@ fromJson =
 empty : Media
 empty =
     Media Dict.empty
-
-
-{-| -}
-fromList : List ( ImageClass, String ) -> Media
-fromList =
-    Media << Dict.fromList << List.map (Tuple.mapFirst imageClassToString)
 
 
 {-| -}
