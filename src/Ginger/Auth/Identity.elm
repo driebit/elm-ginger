@@ -1,4 +1,23 @@
-module Ginger.Auth.Identity exposing (Identity, Type(..), fromJson)
+module Ginger.Auth.Identity exposing
+    ( Identity
+    , Method(..)
+    , fromJson
+    )
+
+{-|
+
+
+# Definitions
+
+@docs Identity
+@docs Method
+
+
+# Decode
+
+@docs fromJson
+
+-}
 
 import Iso8601
 import Json.Decode as Decode
@@ -10,16 +29,23 @@ import Time
 -- DEFINITIONS
 
 
-type Type
-    = UsernamePassword
+{-| The method used for creating an identity
+-}
+type Method
+    = Ginger
+    | Facebook
+    | Instagram
+    | LinkedIn
+    | Twitter
     | Unknown String
 
 
+{-| -}
 type alias Identity =
     { id : Int
     , resourceId : Int
-    , type_ : Type
-    , username : String
+    , method : Method
+    , key : String
     , unique : Bool
     , verified : Bool
     , created : Time.Posix
@@ -32,6 +58,8 @@ type alias Identity =
 -- DECODERS
 
 
+{-| Decode a Ginger identity json value to an Identity record
+-}
 fromJson : Decode.Decoder Identity
 fromJson =
     Decode.succeed Identity
@@ -46,18 +74,30 @@ fromJson =
         |> Pipeline.required "visited" Iso8601.decoder
 
 
-decodeIdentityType : Decode.Decoder Type
+decodeIdentityType : Decode.Decoder Method
 decodeIdentityType =
     Decode.andThen identityTypeFromString <|
         Decode.string
 
 
-identityTypeFromString : String -> Decode.Decoder Type
+identityTypeFromString : String -> Decode.Decoder Method
 identityTypeFromString type_ =
     Decode.succeed <|
         case type_ of
             "username_pw" ->
-                UsernamePassword
+                Ginger
+
+            "twitter" ->
+                Twitter
+
+            "facebook" ->
+                Facebook
+
+            "instagram" ->
+                Instagram
+
+            "linkedin" ->
+                LinkedIn
 
             other ->
                 Unknown other

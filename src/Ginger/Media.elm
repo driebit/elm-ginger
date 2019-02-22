@@ -1,11 +1,33 @@
 module Ginger.Media exposing
-    ( ImageClass(..)
-    , Media
+    ( Media
+    , MediaClass(..)
     , empty
-    , fromJson
-    , fromList
     , url
+    , imageClassToString
+    , fromJson
     )
+
+{-|
+
+
+# Definitions
+
+@docs Media
+@docs MediaClass
+
+
+# Build & Query
+
+@docs empty
+@docs url
+@docs imageClassToString
+
+
+# Decode
+
+@docs fromJson
+
+-}
 
 import Dict exposing (Dict)
 import Json.Decode as Decode
@@ -16,16 +38,20 @@ import Json.Decode.Pipeline as Pipeline
 -- DEFINITIONS
 
 
+{-| -}
 type Media
     = Media (Dict String String)
 
 
-type ImageClass
+{-| -}
+type MediaClass
     = Avatar
     | Thumbnail
+    | Card
     | Small
     | Medium
     | Large
+    | Cinemascope
     | Custom String
 
 
@@ -33,6 +59,7 @@ type ImageClass
 -- DECODE
 
 
+{-| -}
 fromJson : Decode.Decoder Media
 fromJson =
     let
@@ -49,22 +76,20 @@ fromJson =
 -- OTHER
 
 
+{-| -}
 empty : Media
 empty =
     Media Dict.empty
 
 
-fromList : List ( ImageClass, String ) -> Media
-fromList =
-    Media << Dict.fromList << List.map (Tuple.mapFirst imageClassToString)
-
-
-url : ImageClass -> Media -> Maybe String
+{-| -}
+url : MediaClass -> Media -> Maybe String
 url imageClass (Media media) =
     Dict.get (imageClassToString imageClass) media
 
 
-imageClassToString : ImageClass -> String
+{-| -}
+imageClassToString : MediaClass -> String
 imageClassToString imageClass =
     case imageClass of
         Avatar ->
@@ -72,6 +97,9 @@ imageClassToString imageClass =
 
         Thumbnail ->
             "thumbnail"
+
+        Card ->
+            "card"
 
         Small ->
             "small"
@@ -81,6 +109,9 @@ imageClassToString imageClass =
 
         Large ->
             "large"
+
+        Cinemascope ->
+            "cinemascope"
 
         Custom custom ->
             custom

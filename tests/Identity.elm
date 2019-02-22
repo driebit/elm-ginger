@@ -23,8 +23,8 @@ identity : Identity
 identity =
     { id = 1
     , resourceId = 1
-    , type_ = Identity.UsernamePassword
-    , username = "jimi"
+    , method = Identity.Ginger
+    , key = "jimi"
     , unique = True
     , verified = True
     , created = Time.millisToPosix 1

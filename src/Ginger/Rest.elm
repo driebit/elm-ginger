@@ -1,33 +1,24 @@
 module Ginger.Rest exposing
-    ( requestResourceById
+    ( requestResources
+    , requestResourceById
     , requestResourceByPath
-    , requestResources
-    , hasCategory
-    , hasObjectId
-    , hasObjectName
-    , hasSubjectId
-    , hasSubjectName
+    , QueryParam(..)
+    , Ordering(..)
+    , SortField(..)
+    , queryParamsToBuilder
     )
 
 {-|
 
 
-# Requests
+# Http
 
-    import Ginger.Resource exposing (Resource)
-    import Ginger.Rest exposing (requestResources)
-    import Http
-
-    request : Http.Request Http.Error Resource
-    request =
-        requestResourceById 242
-
+@docs requestResources
 @docs requestResourceById
 @docs requestResourceByPath
-@docs requestResources
 
 
-# Query Parameters
+# Query parameters
 
     import Ginger.Resource exposing (Category, Resource)
     import Ginger.Rest exposing (requestResources)
@@ -36,22 +27,22 @@ module Ginger.Rest exposing
     request : Http.Request Http.Error (List Resource)
     request =
         requestResources
-            [ hasSubjectId 242
-            , hasObjectName "region"
-            , hasCategory Event
+            [ SubjectId 242
+            , ObjectName "region"
+            , Category Event
             ]
 
-@docs hasCategory
-@docs hasObjectId
-@docs hasObjectName
-@docs hasSubjectId
-@docs hasSubjectName
+@docs QueryParam
+
+@docs Ordering
+@docs SortField
+
+@docs queryParamsToBuilder
 
 -}
 
 import Ginger.Category as Category exposing (Category)
 import Ginger.Resource as Resource exposing (Resource)
-import Ginger.Resource.Decode
 import Http
 import Json.Decode as Decode
 import Url
@@ -78,10 +69,12 @@ absolute path queryParams =
         requestResources []
 
 -}
-requestResources : List Url.Builder.QueryParameter -> Http.Request (List Resource)
-requestResources queryParams =
-    Http.get (absolute [] queryParams)
-        (Decode.list Ginger.Resource.Decode.fromJson)
+requestResources : List QueryParam -> (Result Http.Error (List Resource) -> msg) -> Cmd msg
+requestResources queryParams msg =
+    Http.get
+        { url = absolute [] (queryParamsToBuilder queryParams)
+        , expect = Http.expectJson msg (Decode.list Resource.fromJson)
+        }
 
 
 {-|
@@ -91,9 +84,12 @@ requestResources queryParams =
         requestResourceById 242
 
 -}
-requestResourceById : Int -> Http.Request Resource
-requestResourceById id =
-    Http.get (absolute [ String.fromInt id ] []) Ginger.Resource.Decode.fromJson
+requestResourceById : Int -> (Result Http.Error Resource -> msg) -> Cmd msg
+requestResourceById id msg =
+    Http.get
+        { url = absolute [ String.fromInt id ] []
+        , expect = Http.expectJson msg Resource.fromJson
+        }
 
 
 {-|
@@ -103,71 +99,72 @@ requestResourceById id =
         requestResourceByPath "/news"
 
 -}
-requestResourceByPath : String -> Http.Request Resource
-requestResourceByPath path =
-    Http.get (absolute [ "path", path ] []) Ginger.Resource.Decode.fromJson
+requestResourceByPath : String -> (Result Http.Error Resource -> msg) -> Cmd msg
+requestResourceByPath path msg =
+    Http.get
+        { url = absolute [ "path", Url.percentEncode path ] []
+        , expect = Http.expectJson msg Resource.fromJson
+        }
 
 
 
 -- QUERYPARAMS
 
 
-{-| Specifying multiple ‘hasCategory’ arguments will do an OR on the categories.
-So to select both news and event resources:
-
-    request : Http.Request Http.Error (List Resource)
-    request =
-        requestResources [ hasCategory News, hasCategory Event ]
-
--}
-hasCategory : Category -> Url.Builder.QueryParameter
-hasCategory =
-    Url.Builder.string "cat" << Category.toString
+{-| -}
+type QueryParam
+    = Category Category
+    | ObjectId Int
+    | ObjectName String
+    | SubjectId Int
+    | SubjectName String
+    | SortBy SortField Ordering
 
 
-{-|
-
-    request : Http.Request Http.Error (List Resource)
-    request =
-        requestResources [ hasObjectId 42 ]
-
--}
-hasObjectId : Int -> Url.Builder.QueryParameter
-hasObjectId =
-    Url.Builder.int "hasobject"
+{-| -}
+type Ordering
+    = Asc
+    | Desc
 
 
-{-|
-
-    request : Http.Request Http.Error (List Resource)
-    request =
-        requestResources [ hasObjectName "region" ]
-
--}
-hasObjectName : String -> Url.Builder.QueryParameter
-hasObjectName =
-    Url.Builder.string "hasobject"
+{-| -}
+type SortField
+    = PublicationDate
+    | StartDate
 
 
-{-|
-
-    request : Http.Request Http.Error (List Resource)
-    request =
-        requestResources [ hasObjectId 42 ]
-
--}
-hasSubjectId : Int -> Url.Builder.QueryParameter
-hasSubjectId =
-    Url.Builder.int "hassubject"
+{-| -}
+queryParamsToBuilder : List QueryParam -> List Url.Builder.QueryParameter
+queryParamsToBuilder =
+    List.map toUrlParam
 
 
-{-|
+toUrlParam : QueryParam -> Url.Builder.QueryParameter
+toUrlParam queryParam =
+    case queryParam of
+        Category cat ->
+            Url.Builder.string "cat" (Category.toString cat)
 
-    request : Http.Request Http.Error (List Resource)
-    request =
-        requestResources [ hasObjectId "region" ]
+        ObjectId id ->
+            Url.Builder.int "hasobject" id
 
--}
-hasSubjectName : String -> Url.Builder.QueryParameter
-hasSubjectName =
-    Url.Builder.string "hassubject"
+        ObjectName name ->
+            Url.Builder.string "hasobject" name
+
+        SubjectId id ->
+            Url.Builder.int "hasobject" id
+
+        SubjectName name ->
+            Url.Builder.string "hassubject" name
+
+        SortBy PublicationDate Asc ->
+            Url.Builder.string "sort" "+rsc.publication_start"
+
+        SortBy PublicationDate Desc ->
+            Url.Builder.string "sort" "-rsc.publication_start"
+
+        SortBy StartDate Asc ->
+            Url.Builder.string "sort" "+rsc.date_start"
+
+        SortBy StartDate Desc ->
+            Url.Builder.string "sort" "-rsc.date_start"

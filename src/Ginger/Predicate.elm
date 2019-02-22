@@ -1,9 +1,29 @@
 module Ginger.Predicate exposing
     ( Predicate(..)
-    , fromJson
-    , fromString
     , toString
+    , fromString
+    , fromJson
     )
+
+{-|
+
+
+# Definition
+
+@docs Predicate
+
+
+# Conversions
+
+@docs toString
+@docs fromString
+
+
+# Decode
+
+@docs fromJson
+
+-}
 
 import Json.Decode as Decode
 
@@ -14,12 +34,13 @@ import Json.Decode as Decode
 
 {-| -}
 type Predicate
-    = About
-    | Author
-    | Depiction
+    = IsAbout
+    | HasAuthor
+    | HasDepiction
+    | HasDocument
     | HasBanner
     | HasPart
-    | Relation
+    | HasRelation
     | Custom String
 
 
@@ -27,6 +48,7 @@ type Predicate
 -- DECODE
 
 
+{-| -}
 fromJson : Decode.Decoder Predicate
 fromJson =
     Decode.map fromString Decode.string
@@ -37,22 +59,25 @@ fromString : String -> Predicate
 fromString predicate =
     case predicate of
         "about" ->
-            About
+            IsAbout
 
         "author" ->
-            Author
+            HasAuthor
 
         "depiction" ->
-            Depiction
+            HasDepiction
 
         "hasbanner" ->
             HasBanner
+
+        "hasdocument" ->
+            HasDocument
 
         "haspart" ->
             HasPart
 
         "relation" ->
-            Relation
+            HasRelation
 
         x ->
             Custom x
@@ -62,14 +87,17 @@ fromString predicate =
 toString : Predicate -> String
 toString predicate =
     case predicate of
-        About ->
+        IsAbout ->
             "about"
 
-        Author ->
+        HasAuthor ->
             "author"
 
-        Depiction ->
+        HasDepiction ->
             "depiction"
+
+        HasDocument ->
+            "hasdocument"
 
         HasBanner ->
             "hasBanner"
@@ -77,7 +105,7 @@ toString predicate =
         HasPart ->
             "hasPart"
 
-        Relation ->
+        HasRelation ->
             "relation"
 
         Custom x ->
