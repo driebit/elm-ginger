@@ -107,7 +107,7 @@ type QueryParam
     = Category Category
     | CategoryExclude Category
     | CategoryPromote Category
-    | FacetParam String
+    | Facet String
     | Filter String Operator String
     | Limit Int
     | Offset Int
@@ -158,7 +158,7 @@ toUrlParam queryParam =
         CategoryExclude cat ->
             Url.Builder.string "cat_exclude" (Category.toString cat)
 
-        FacetParam facet ->
+        Facet facet ->
             Url.Builder.string "facet" facet
 
         Filter k o v ->
