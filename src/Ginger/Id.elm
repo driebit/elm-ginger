@@ -7,7 +7,7 @@ module Ginger.Id exposing
 {-|
 
 
-# Definitions
+# Definition
 
 @docs Id
 

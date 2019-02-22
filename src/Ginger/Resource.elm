@@ -16,6 +16,7 @@ module Ginger.Resource exposing
 # Definitions
 
 @docs Resource
+
 @docs Edges
 @docs Block
 
@@ -36,7 +37,6 @@ module Ginger.Resource exposing
 -}
 
 import Ginger.Category as Category exposing (Category(..))
-import Ginger.Edge as Edge exposing (Edge)
 import Ginger.Id as Id exposing (Id)
 import Ginger.Media as Media exposing (Media)
 import Ginger.Predicate as Predicate exposing (Predicate(..))
@@ -69,16 +69,22 @@ type alias Resource =
 
 
 {-| -}
+type Edges
+    = NotFetched
+    | Edges (List Edge)
+
+
+{-| A named connection to a resource
+-}
+type Edge
+    = Edge Predicate Resource
+
+
+{-| -}
 type alias Block =
     { body : Translation
     , name : String
     }
-
-
-{-| -}
-type Edges
-    = NotFetched
-    | Edges (List (Edge Resource))
 
 
 
@@ -86,20 +92,33 @@ type Edges
 
 
 {-| -}
-edges : Resource -> Maybe (List (Edge Resource))
+edges : Resource -> Maybe (List Resource)
 edges resource =
     case resource.edges of
         NotFetched ->
             Nothing
 
         Edges xs ->
-            Just xs
+            Just (List.map (\(Edge _ r) -> r) xs)
 
 
 {-| -}
 edgesWithPredicate : Predicate -> Resource -> Maybe (List Resource)
 edgesWithPredicate predicate resource =
-    Maybe.map (Edge.withPredicate predicate) (edges resource)
+    case resource.edges of
+        NotFetched ->
+            Nothing
+
+        Edges xs ->
+            let
+                filter (Edge p r) =
+                    if p == predicate then
+                        Just r
+
+                    else
+                        Nothing
+            in
+            Just (List.filterMap filter xs)
 
 
 {-| -}
@@ -109,21 +128,16 @@ category =
 
 
 {-| -}
-media : Predicate -> Media.ImageClass -> Resource -> List String
+media : Predicate -> Media.ImageClass -> Resource -> Maybe (List String)
 media predicate imageClass resource =
-    case resource.edges of
-        Edges xs ->
-            List.filterMap (Media.url imageClass << .media) <|
-                Edge.withPredicate predicate xs
-
-        NotFetched ->
-            []
+    Maybe.map (List.filterMap (Media.url imageClass << .media)) <|
+        edgesWithPredicate predicate resource
 
 
 {-| -}
 depiction : Media.ImageClass -> Resource -> Maybe String
 depiction imageClass resource =
-    List.head <|
+    Maybe.andThen List.head <|
         media Predicate.HasDepiction imageClass resource
 
 
@@ -138,11 +152,11 @@ type alias IncludeEdges =
 {-| -}
 fromJson : Decode.Decoder Resource
 fromJson =
-    decode True
+    decodeResource True
 
 
-decode : IncludeEdges -> Decode.Decoder Resource
-decode includeEdges =
+decodeResource : IncludeEdges -> Decode.Decoder Resource
+decodeResource includeEdges =
     let
         edgesDecoder =
             if includeEdges then
@@ -168,12 +182,14 @@ decode includeEdges =
 decodeEdges : Decode.Decoder Edges
 decodeEdges =
     Decode.map Edges <|
-        Decode.list (Decode.lazy (\_ -> Edge.fromJson decodeEdgeResource))
+        Decode.list (Decode.lazy (\_ -> decodeEdge))
 
 
-decodeEdgeResource : Decode.Decoder Resource
-decodeEdgeResource =
-    Decode.field "resource" (decode False)
+decodeEdge : Decode.Decoder Edge
+decodeEdge =
+    Decode.succeed Edge
+        |> Pipeline.required "predicate_name" Predicate.fromJson
+        |> Pipeline.required "resource" (decodeResource False)
 
 
 decodeBlock : Decode.Decoder Block

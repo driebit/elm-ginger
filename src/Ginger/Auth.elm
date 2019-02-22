@@ -12,7 +12,7 @@ module Ginger.Auth exposing
 {-|
 
 
-# Definitions
+# Definition
 
 @docs Status
 
