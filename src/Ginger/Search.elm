@@ -1,12 +1,8 @@
 module Ginger.Search exposing
     ( request
-    , text
-    , hasCategory
-    , upcoming
-    , unfinished
-    , SortDirection(..)
+    , QueryParam(..)
+    , Ordering(..)
     , SortField(..)
-    , sortBy
     )
 
 {-|
@@ -31,13 +27,9 @@ module Ginger.Search exposing
             ]
 
 @docs request
-@docs text
-@docs hasCategory
-@docs upcoming
-@docs unfinished
-@docs SortDirection
+@docs QueryParam
+@docs Ordering
 @docs SortField
-@docs sortBy
 
 -}
 
@@ -83,86 +75,17 @@ request queryParams msg =
 -- QUERYPARAMS
 
 
-{-|
-
-    request : Http.Request Http.Error (List Resource)
-    request =
-        request [ text "jimi hendrix" ]
-
--}
-text : String -> Url.Builder.QueryParameter
-text =
-    Url.Builder.string "text"
-
-
-{-| Specifying multiple ‘hasCategory’ arguments will do an OR on the categories.
-So to select both news and event resources:
-
-    request : Http.Request Http.Error (List Resource)
-    request =
-        request [ hasCategory News, hasCategory Event ]
-
--}
-hasCategory : Category -> Url.Builder.QueryParameter
-hasCategory =
-    Url.Builder.string "cat" << Category.toString
-
-
-{-|
-
-    request : Http.Request Http.Error (List Resource)
-    request =
-        request [ upcoming ]
-
--}
-upcoming : Url.Builder.QueryParameter
-upcoming =
-    Url.Builder.string "upcoming" "true"
-
-
-{-|
-
-    request : Http.Request Http.Error (List Resource)
-    request =
-        request [ unfinished ]
-
--}
-unfinished : Url.Builder.QueryParameter
-unfinished =
-    Url.Builder.string "unfinished" "true"
-
-
-{-|
-
-    request : Http.Request Http.Error (List Resource)
-    request =
-        request [ sortBy StartData Asc ]
-
--}
-sortBy : SortField -> SortDirection -> Url.Builder.QueryParameter
-sortBy field direction =
-    let
-        format =
-            case direction of
-                Asc ->
-                    "+rsc."
-
-                Desc ->
-                    "-rsc."
-
-        field_ =
-            case field of
-                PublicationDate ->
-                    "publication_start"
-
-                StartDate ->
-                    "date_start"
-    in
-    Url.Builder.string "sort" (format ++ field_)
+{-| -}
+type QueryParam
+    = Category Category
+    | Text String
+    | Upcoming
+    | Unfinished
+    | SortBy SortField Ordering
 
 
 {-| -}
-type SortDirection
+type Ordering
     = Asc
     | Desc
 
@@ -171,3 +94,36 @@ type SortDirection
 type SortField
     = PublicationDate
     | StartDate
+
+
+queryParmsToUrl : List QueryParam -> List Url.Builder.QueryParameter
+queryParmsToUrl =
+    List.map toUrlParam
+
+
+toUrlParam : QueryParam -> Url.Builder.QueryParameter
+toUrlParam queryParam =
+    case queryParam of
+        Category cat ->
+            Url.Builder.string "cat" (Category.toString cat)
+
+        Text text ->
+            Url.Builder.string "text" text
+
+        Upcoming ->
+            Url.Builder.string "upcoming" "true"
+
+        Unfinished ->
+            Url.Builder.string "unfinished" "true"
+
+        SortBy PublicationDate Asc ->
+            Url.Builder.string "sort" "+rsc.publication_start"
+
+        SortBy PublicationDate Desc ->
+            Url.Builder.string "sort" "-rsc.publication_start"
+
+        SortBy StartDate Asc ->
+            Url.Builder.string "sort" "+rsc.date_start"
+
+        SortBy StartDate Desc ->
+            Url.Builder.string "sort" "-rsc.date_start"

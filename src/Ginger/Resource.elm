@@ -1,12 +1,11 @@
 module Ginger.Resource exposing
     ( Resource
-    , Edges(..)
     , Block
-    , category
     , edges
+    , edgesWithPredicate
+    , category
     , media
     , depiction
-    , edgesWithPredicate
     , fromJson
     )
 
@@ -17,17 +16,16 @@ module Ginger.Resource exposing
 
 @docs Resource
 
-@docs Edges
 @docs Block
 
 
 # Query
 
-@docs category
 @docs edges
+@docs edgesWithPredicate
+@docs category
 @docs media
 @docs depiction
-@docs edgesWithPredicate
 
 
 # Decode

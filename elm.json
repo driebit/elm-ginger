@@ -9,7 +9,6 @@
         "Ginger.Auth",
         "Ginger.Auth.Identity",
         "Ginger.Category",
-        "Ginger.Edge",
         "Ginger.Media",
         "Ginger.Predicate",
         "Ginger.Search",
