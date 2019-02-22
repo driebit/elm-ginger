@@ -3,6 +3,7 @@ module Ginger.Search exposing
     , QueryParam(..)
     , Ordering(..)
     , SortField(..)
+    , queryParamsToBuilder
     )
 
 {-|
@@ -61,10 +62,10 @@ absolute queryParams =
         requestResources []
 
 -}
-request : List Url.Builder.QueryParameter -> (Result Http.Error (List Resource) -> msg) -> Cmd msg
+request : List QueryParam -> (Result Http.Error (List Resource) -> msg) -> Cmd msg
 request queryParams msg =
     Http.get
-        { url = absolute queryParams
+        { url = absolute (queryParamsToBuilder queryParams)
         , expect =
             Http.expectJson msg
                 (Decode.field "result" (Decode.list Resource.fromJson))
@@ -96,8 +97,8 @@ type SortField
     | StartDate
 
 
-queryParmsToUrl : List QueryParam -> List Url.Builder.QueryParameter
-queryParmsToUrl =
+queryParamsToBuilder : List QueryParam -> List Url.Builder.QueryParameter
+queryParamsToBuilder =
     List.map toUrlParam
 
 
