@@ -1,33 +1,37 @@
 module Ginger.Search exposing
-    ( request
+    ( Results
+    , requestResources
     , QueryParam(..)
     , Ordering(..)
     , SortField(..)
     , queryParamsToBuilder
+    , requestLocations
     )
 
 {-|
+
+@docs Results
 
 
 # Search Ginger Resources
 
     import Ginger.Resource exposing (Category, Resource)
-    import Ginger.Rest exposing (request)
+    import Ginger.Rest exposing (requestResources)
     import Http
 
     query : String -> Http.Request Http.Error (List Resource)
     query term =
-        request [ text term ]
+        requestResources [ text term ]
 
     events : Http.Request Http.Error (List Resource)
     events =
-        request
+        requestResources
             [ upcoming
             , hasCategory Event
             , sortBy StartData Asc
             ]
 
-@docs request
+@docs requestResources
 
 @docs QueryParam
 
@@ -39,20 +43,24 @@ module Ginger.Search exposing
 -}
 
 import Ginger.Category as Category exposing (Category)
+import Ginger.Location as Location exposing (Location)
 import Ginger.Resource as Resource exposing (Resource)
 import Http
 import Json.Decode as Decode
+import Json.Decode.Pipeline as Pipeline
 import Url
 import Url.Builder
 
 
 
--- URL
+-- DEFINITIONS
 
 
-absolute : List Url.Builder.QueryParameter -> String
-absolute queryParams =
-    Url.Builder.absolute [ "data", "search" ] queryParams
+type alias Results a =
+    { results : a
+    , facets : Decode.Value
+    , total : Int
+    }
 
 
 
@@ -61,18 +69,32 @@ absolute queryParams =
 
 {-|
 
-    request : Http.Request Http.Error (List Resource)
-    request =
+    requestResources : Http.Request Http.Error (List Resource)
+    requestResources =
         requestResources []
 
 -}
-request : List QueryParam -> (Result Http.Error (List Resource) -> msg) -> Cmd msg
-request queryParams msg =
+requestResources : List QueryParam -> (Result Http.Error (Results (List Resource)) -> msg) -> Cmd msg
+requestResources queryParams msg =
     Http.get
-        { url = absolute (queryParamsToBuilder queryParams)
+        { url =
+            Url.Builder.absolute [ "data", "search" ] <|
+                queryParamsToBuilder queryParams
         , expect =
-            Http.expectJson msg
-                (Decode.field "result" (Decode.list Resource.fromJson))
+            Http.expectJson msg <|
+                fromJson (Decode.list Resource.fromJson)
+        }
+
+
+requestLocations : List QueryParam -> (Result Http.Error (Results (List Location)) -> msg) -> Cmd msg
+requestLocations queryParams msg =
+    Http.get
+        { url =
+            Url.Builder.absolute [ "data", "search", "coordinates" ] <|
+                queryParamsToBuilder queryParams
+        , expect =
+            Http.expectJson msg <|
+                fromJson (Decode.list Location.fromJson)
         }
 
 
@@ -83,10 +105,17 @@ request queryParams msg =
 {-| -}
 type QueryParam
     = Category Category
-    | Text String
-    | Upcoming
-    | Unfinished
+    | CategoryExclude Category
+    | CategoryPromote Category
+    | FacetParam String
+    | Filter String Operator String
+    | Limit Int
+    | Offset Int
     | SortBy SortField Ordering
+    | Text String
+    | Unfinished
+    | Upcoming
+    | Custom String String
 
 
 {-| -}
@@ -101,6 +130,17 @@ type SortField
     | StartDate
 
 
+{-| -}
+type Operator
+    = EQ
+    | LTE
+    | LT
+    | GT
+    | GTE
+    | MatchPhrase
+
+
+{-| -}
 queryParamsToBuilder : List QueryParam -> List Url.Builder.QueryParameter
 queryParamsToBuilder =
     List.map toUrlParam
@@ -112,14 +152,27 @@ toUrlParam queryParam =
         Category cat ->
             Url.Builder.string "cat" (Category.toString cat)
 
+        CategoryPromote cat ->
+            Url.Builder.string "cat_promote" (Category.toString cat)
+
+        CategoryExclude cat ->
+            Url.Builder.string "cat_exclude" (Category.toString cat)
+
+        FacetParam facet ->
+            Url.Builder.string "facet" facet
+
+        Filter k o v ->
+            Url.Builder.string "filter"
+                (k ++ operatorToString o ++ v)
+
+        Limit limit ->
+            Url.Builder.int "limit" limit
+
+        Offset offset ->
+            Url.Builder.int "offset" offset
+
         Text text ->
             Url.Builder.string "text" text
-
-        Upcoming ->
-            Url.Builder.string "upcoming" "true"
-
-        Unfinished ->
-            Url.Builder.string "unfinished" "true"
 
         SortBy PublicationDate Asc ->
             Url.Builder.string "sort" "+rsc.publication_start"
@@ -132,3 +185,46 @@ toUrlParam queryParam =
 
         SortBy StartDate Desc ->
             Url.Builder.string "sort" "-rsc.date_start"
+
+        Upcoming ->
+            Url.Builder.string "upcoming" "true"
+
+        Unfinished ->
+            Url.Builder.string "unfinished" "true"
+
+        Custom k v ->
+            Url.Builder.string k v
+
+
+operatorToString : Operator -> String
+operatorToString operator =
+    case operator of
+        EQ ->
+            "="
+
+        GT ->
+            ">"
+
+        GTE ->
+            ">="
+
+        LT ->
+            "<"
+
+        LTE ->
+            "<="
+
+        MatchPhrase ->
+            "~"
+
+
+
+-- DECODE
+
+
+fromJson : Decode.Decoder a -> Decode.Decoder (Results a)
+fromJson decoder =
+    Decode.succeed Results
+        |> Pipeline.required "result" decoder
+        |> Pipeline.required "facets" Decode.value
+        |> Pipeline.required "total" Decode.int
