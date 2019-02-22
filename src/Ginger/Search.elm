@@ -1,19 +1,23 @@
 module Ginger.Search exposing
     ( Results
     , requestResources
+    , requestLocations
     , QueryParam(..)
     , Ordering(..)
     , SortField(..)
+    , Operator(..)
     , queryParamsToBuilder
-    , Operator(..), requestLocations
     )
 
 {-|
 
+
+# Defintions
+
 @docs Results
 
 
-# Search Ginger Resources
+# Http
 
     import Ginger.Resource exposing (Category, Resource)
     import Ginger.Rest exposing (requestResources)
@@ -32,11 +36,13 @@ module Ginger.Search exposing
             ]
 
 @docs requestResources
+@docs requestLocations
 
 @docs QueryParam
 
 @docs Ordering
 @docs SortField
+@docs Operator
 
 @docs queryParamsToBuilder
 
@@ -56,6 +62,7 @@ import Url.Builder
 -- DEFINITIONS
 
 
+{-| -}
 type alias Results a =
     { results : a
     , facets : Decode.Value
@@ -86,6 +93,7 @@ requestResources queryParams msg =
         }
 
 
+{-| -}
 requestLocations : List QueryParam -> (Result Http.Error (Results (List Location)) -> msg) -> Cmd msg
 requestLocations queryParams msg =
     Http.get
@@ -104,17 +112,17 @@ requestLocations queryParams msg =
 
 {-| -}
 type QueryParam
-    = Category Category
-    | CategoryExclude Category
-    | CategoryPromote Category
+    = HasCategory Category
+    | ExcludeCategory Category
+    | PromoteCategory Category
     | Facet String
     | Filter String Operator String
     | Limit Int
     | Offset Int
     | SortBy SortField Ordering
     | Text String
-    | Unfinished
-    | Upcoming
+    | IsUnfinished
+    | IsUpcoming
     | Custom String String
 
 
@@ -149,13 +157,13 @@ queryParamsToBuilder =
 toUrlParam : QueryParam -> Url.Builder.QueryParameter
 toUrlParam queryParam =
     case queryParam of
-        Category cat ->
+        HasCategory cat ->
             Url.Builder.string "cat" (Category.toString cat)
 
-        CategoryPromote cat ->
+        PromoteCategory cat ->
             Url.Builder.string "cat_promote" (Category.toString cat)
 
-        CategoryExclude cat ->
+        ExcludeCategory cat ->
             Url.Builder.string "cat_exclude" (Category.toString cat)
 
         Facet facet ->
@@ -186,10 +194,10 @@ toUrlParam queryParam =
         SortBy StartDate Desc ->
             Url.Builder.string "sort" "-rsc.date_start"
 
-        Upcoming ->
+        IsUpcoming ->
             Url.Builder.string "upcoming" "true"
 
-        Unfinished ->
+        IsUnfinished ->
             Url.Builder.string "unfinished" "true"
 
         Custom k v ->

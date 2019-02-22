@@ -1,4 +1,21 @@
-module Ginger.Location exposing (Location, fromJson)
+module Ginger.Location exposing
+    ( Location
+    , fromJson
+    )
+
+{-|
+
+
+# Defintion
+
+@docs Location
+
+
+# Decode
+
+@docs fromJson
+
+-}
 
 import Ginger.Id exposing (Id)
 import Json.Decode as Decode
@@ -9,6 +26,7 @@ import Json.Decode.Pipeline as Pipeline
 -- DEFINITION
 
 
+{-| -}
 type alias Location =
     { id : Id
     , lat : Float
@@ -20,6 +38,7 @@ type alias Location =
 -- DECODE
 
 
+{-| -}
 fromJson : Decode.Decoder Location
 fromJson =
     Decode.succeed Location
