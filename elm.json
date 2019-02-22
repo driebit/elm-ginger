@@ -1,19 +1,18 @@
 {
     "type": "package",
     "name": "driebit/elm-ginger",
-    "summary": "Elm ginger integration",
+    "summary": "Ginger CMS integration",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": [
         "Ginger.Resource",
+        "Ginger.Category",
+        "Ginger.Predicate",
+        "Ginger.Media",
+        "Ginger.Translation",
         "Ginger.Auth",
         "Ginger.Auth.Identity",
-        "Ginger.Category",
-        "Ginger.Media",
-        "Ginger.Predicate",
-        "Ginger.Search",
-        "Ginger.Rest",
-        "Ginger.Translation"
+        "Ginger.Rest"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {
