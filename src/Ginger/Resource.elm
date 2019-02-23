@@ -80,7 +80,9 @@ type Edge
 
 {-| -}
 type alias Block =
-    { body : Translation
+    { resourceId : Maybe Id
+    , type_ : String
+    , body : Translation
     , name : String
     }
 
@@ -193,5 +195,7 @@ decodeEdge =
 decodeBlock : Decode.Decoder Block
 decodeBlock =
     Decode.succeed Block
+        |> Pipeline.required "rsc_id" (Decode.nullable Id.fromJson)
+        |> Pipeline.required "type" Decode.string
         |> Pipeline.required "body" Translation.fromJson
         |> Pipeline.required "name" Decode.string
