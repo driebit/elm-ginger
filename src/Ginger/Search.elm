@@ -49,8 +49,8 @@ module Ginger.Search exposing
 -}
 
 import Ginger.Category as Category exposing (Category)
-import Ginger.Location as Location exposing (Location)
 import Ginger.Resource as Resource exposing (Resource)
+import Ginger.Resource.Extra as Extra exposing (Location)
 import Http
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
@@ -102,7 +102,7 @@ requestLocations queryParams msg =
                 queryParamsToBuilder queryParams
         , expect =
             Http.expectJson msg <|
-                fromJson (Decode.list Location.fromJson)
+                fromJson (Decode.list Extra.locationFromJson)
         }
 
 

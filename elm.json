@@ -6,6 +6,7 @@
     "version": "1.0.0",
     "exposed-modules": [
         "Ginger.Resource",
+        "Ginger.Resource.Extra",
         "Ginger.Category",
         "Ginger.Predicate",
         "Ginger.Media",
@@ -13,8 +14,7 @@
         "Ginger.Auth",
         "Ginger.Auth.Identity",
         "Ginger.Rest",
-        "Ginger.Search",
-        "Ginger.Location"
+        "Ginger.Search"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {

@@ -3,8 +3,8 @@ module Ginger.Rest exposing
     , requestResourceById
     , requestResourceByPath
     , QueryParam(..)
-    , Ordering(..)
     , SortField(..)
+    , Ordering(..)
     , queryParamsToBuilder
     )
 
@@ -34,8 +34,8 @@ module Ginger.Rest exposing
 
 @docs QueryParam
 
-@docs Ordering
 @docs SortField
+@docs Ordering
 
 @docs queryParamsToBuilder
 
@@ -113,11 +113,11 @@ requestResourceByPath path msg =
 
 {-| -}
 type QueryParam
-    = Category Category
-    | ObjectId Int
-    | ObjectName String
-    | SubjectId Int
-    | SubjectName String
+    = HasCategory Category
+    | HasObjectId Int
+    | HasObjectName String
+    | HasSubjectId Int
+    | HasSubjectName String
     | SortBy SortField Ordering
 
 
@@ -142,19 +142,19 @@ queryParamsToBuilder =
 toUrlParam : QueryParam -> Url.Builder.QueryParameter
 toUrlParam queryParam =
     case queryParam of
-        Category cat ->
+        HasCategory cat ->
             Url.Builder.string "cat" (Category.toString cat)
 
-        ObjectId id ->
+        HasObjectId id ->
             Url.Builder.int "hasobject" id
 
-        ObjectName name ->
+        HasObjectName name ->
             Url.Builder.string "hasobject" name
 
-        SubjectId id ->
+        HasSubjectId id ->
             Url.Builder.int "hasobject" id
 
-        SubjectName name ->
+        HasSubjectName name ->
             Url.Builder.string "hassubject" name
 
         SortBy PublicationDate Asc ->
