@@ -69,8 +69,8 @@ absolute path queryParams =
         requestResources []
 
 -}
-requestResources : List QueryParam -> (Result Http.Error (List Resource) -> msg) -> Cmd msg
-requestResources queryParams msg =
+requestResources : (Result Http.Error (List Resource) -> msg) -> List QueryParam -> Cmd msg
+requestResources msg queryParams =
     Http.get
         { url = absolute [] (queryParamsToBuilder queryParams)
         , expect = Http.expectJson msg (Decode.list Resource.fromJson)
@@ -84,8 +84,8 @@ requestResources queryParams msg =
         requestResourceById 242
 
 -}
-requestResourceById : Int -> (Result Http.Error Resource -> msg) -> Cmd msg
-requestResourceById id msg =
+requestResourceById : (Result Http.Error Resource -> msg) -> Int -> Cmd msg
+requestResourceById msg id =
     Http.get
         { url = absolute [ String.fromInt id ] []
         , expect = Http.expectJson msg Resource.fromJson
@@ -99,8 +99,8 @@ requestResourceById id msg =
         requestResourceByPath "/news"
 
 -}
-requestResourceByPath : String -> (Result Http.Error Resource -> msg) -> Cmd msg
-requestResourceByPath path msg =
+requestResourceByPath : (Result Http.Error Resource -> msg) -> String -> Cmd msg
+requestResourceByPath msg path =
     Http.get
         { url = absolute [ "path", Url.percentEncode path ] []
         , expect = Http.expectJson msg Resource.fromJson

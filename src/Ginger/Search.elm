@@ -64,7 +64,7 @@ import Url.Builder
 
 {-| -}
 type alias Results a =
-    { results : a
+    { results : List a
     , facets : Decode.Value
     , total : Int
     }
@@ -81,8 +81,8 @@ type alias Results a =
         requestResources []
 
 -}
-requestResources : List QueryParam -> (Result Http.Error (Results (List Resource)) -> msg) -> Cmd msg
-requestResources queryParams msg =
+requestResources : (Result Http.Error (Results Resource) -> msg) -> List QueryParam -> Cmd msg
+requestResources msg queryParams =
     Http.get
         { url =
             Url.Builder.absolute [ "data", "search" ] <|
@@ -94,8 +94,8 @@ requestResources queryParams msg =
 
 
 {-| -}
-requestLocations : List QueryParam -> (Result Http.Error (Results (List Location)) -> msg) -> Cmd msg
-requestLocations queryParams msg =
+requestLocations : (Result Http.Error (Results Location) -> msg) -> List QueryParam -> Cmd msg
+requestLocations msg queryParams =
     Http.get
         { url =
             Url.Builder.absolute [ "data", "search", "coordinates" ] <|
@@ -230,7 +230,7 @@ operatorToString operator =
 -- DECODE
 
 
-fromJson : Decode.Decoder a -> Decode.Decoder (Results a)
+fromJson : Decode.Decoder (List a) -> Decode.Decoder (Results a)
 fromJson decoder =
     Decode.succeed Results
         |> Pipeline.required "result" decoder

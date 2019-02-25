@@ -1,7 +1,7 @@
 module Identity exposing (suite)
 
 import Expect exposing (Expectation)
-import Ginger.Auth.Identity as Identity exposing (Identity)
+import Ginger.Auth as Auth exposing (Identity)
 import Iso8601
 import Json.Decode as Decode
 import Json.Encode as Encode

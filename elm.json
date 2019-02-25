@@ -9,10 +9,9 @@
         "Ginger.Resource.Extra",
         "Ginger.Category",
         "Ginger.Predicate",
-        "Ginger.Media",
         "Ginger.Translation",
+        "Ginger.Media",
         "Ginger.Auth",
-        "Ginger.Auth.Identity",
         "Ginger.Rest",
         "Ginger.Search"
     ],

@@ -1,5 +1,7 @@
 module Ginger.Auth exposing
     ( Status(..)
+    , Identity
+    , Method(..)
     , requestLogin
     , requestLogout
     , requestSignup
@@ -15,6 +17,8 @@ module Ginger.Auth exposing
 # Definition
 
 @docs Status
+@docs Identity
+@docs Method
 
 
 # Http
@@ -34,12 +38,13 @@ module Ginger.Auth exposing
 
 -}
 
-import Ginger.Auth.Identity as Identity exposing (Identity)
 import Ginger.Resource exposing (Resource)
 import Http
+import Iso8601
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
 import Json.Encode as Encode
+import Time
 
 
 
@@ -52,6 +57,31 @@ type Status
     | Anonymous
     | Loading
     | Error Http.Error
+
+
+{-| -}
+type alias Identity =
+    { id : Int
+    , resourceId : Int
+    , method : Method
+    , key : String
+    , unique : Bool
+    , verified : Bool
+    , created : Time.Posix
+    , modified : Time.Posix
+    , lastVisit : Time.Posix
+    }
+
+
+{-| The method used for creating an identity
+-}
+type Method
+    = Ginger
+    | Facebook
+    | Instagram
+    | LinkedIn
+    | Twitter
+    | Unknown String
 
 
 
@@ -127,18 +157,6 @@ requestLogout msg =
 
 
 
--- DECODERS
-
-
-{-| -}
-fromJson : Decode.Decoder Status
-fromJson =
-    Decode.succeed Authenticated
-        |> Pipeline.required "identity" Identity.fromJson
-        |> Pipeline.optional "resource" (Decode.maybe Ginger.Resource.fromJson) Nothing
-
-
-
 -- ERROR
 
 
@@ -151,3 +169,60 @@ fromResult result =
 
         Err err ->
             Error err
+
+
+
+-- DECODERS
+
+
+{-| -}
+fromJson : Decode.Decoder Status
+fromJson =
+    Decode.succeed Authenticated
+        |> Pipeline.required "identity" identityFromJson
+        |> Pipeline.optional "resource" (Decode.maybe Ginger.Resource.fromJson) Nothing
+
+
+{-| Decode a Ginger identity json value to an Identity record
+-}
+identityFromJson : Decode.Decoder Identity
+identityFromJson =
+    Decode.succeed Identity
+        |> Pipeline.required "id" Decode.int
+        |> Pipeline.required "rsc_id" Decode.int
+        |> Pipeline.required "type" decodeIdentityType
+        |> Pipeline.required "key" Decode.string
+        |> Pipeline.required "is_unique" Decode.bool
+        |> Pipeline.required "is_verified" Decode.bool
+        |> Pipeline.required "created" Iso8601.decoder
+        |> Pipeline.required "modified" Iso8601.decoder
+        |> Pipeline.required "visited" Iso8601.decoder
+
+
+decodeIdentityType : Decode.Decoder Method
+decodeIdentityType =
+    Decode.andThen identityTypeFromString <|
+        Decode.string
+
+
+identityTypeFromString : String -> Decode.Decoder Method
+identityTypeFromString type_ =
+    Decode.succeed <|
+        case type_ of
+            "username_pw" ->
+                Ginger
+
+            "twitter" ->
+                Twitter
+
+            "facebook" ->
+                Facebook
+
+            "instagram" ->
+                Instagram
+
+            "linkedin" ->
+                LinkedIn
+
+            other ->
+                Unknown other
