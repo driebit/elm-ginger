@@ -1,10 +1,10 @@
 module Ginger.Request exposing
-    ( Results
-    , resourceById
+    ( resourceById
     , resourceByPath
     , resourceByName
     , resourceQuery
     , locationQuery
+    , Results
     , QueryParam(..)
     , Ordering(..)
     , SortField(..)
@@ -13,11 +13,6 @@ module Ginger.Request exposing
     )
 
 {-|
-
-
-# Defintions
-
-@docs Results
 
 
 # Http
@@ -46,6 +41,11 @@ module Ginger.Request exposing
             , hasCategory Event
             , sortBy StartData Asc
             ]
+
+
+# Search
+
+@docs Results
 
 @docs QueryParam
 
@@ -94,9 +94,9 @@ absolute path queryParams =
 
 {-|
 
-    request : Http.Request Http.Error Resource
-    request =
-        resourceById 242
+    request : (Http.Request Http.Error Resource -> msg) -> Resource.Id -> Cmd msg
+    request toMsg id =
+        resourceById toMsg id
 
 -}
 resourceById : (Result Http.Error (Resource WithEdges) -> msg) -> Int -> Cmd msg
@@ -109,9 +109,9 @@ resourceById msg id =
 
 {-|
 
-    request : Http.Request Http.Error Resource
-    request =
-        resourceByPath "/news"
+    request : (Http.Request Http.Error Resource -> msg) -> Cmd msg
+    request toMsg =
+        resourceByPath toMsg "/news"
 
 -}
 resourceByPath : (Result Http.Error (Resource WithEdges) -> msg) -> String -> Cmd msg
@@ -124,9 +124,9 @@ resourceByPath msg path =
 
 {-|
 
-    request : Http.Request Http.Error Resource
-    request =
-        resourceByName "home"
+    request : (Http.Request Http.Error Resource -> msg) -> Cmd msg
+    request toMsg =
+        resourceByName GotResource toMsg "home"
 
 -}
 resourceByName : (Result Http.Error (Resource WithEdges) -> msg) -> String -> Cmd msg

@@ -119,8 +119,8 @@ imageUrl mediaClass media =
 
 
 {-| -}
-videoData : MediaClass -> Media -> Maybe VideoData
-videoData mediaClass media =
+videoData : Media -> Maybe VideoData
+videoData media =
     case media of
         Video data ->
             Just data
