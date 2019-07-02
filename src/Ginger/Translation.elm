@@ -79,6 +79,8 @@ toString language (Translation translation) =
 
 {-| Get the translated String value.
 
+The first argument is the fallback Language.
+
 _Attempt fallback if translated value is missing, defaults to an empty String._
 
 -}
