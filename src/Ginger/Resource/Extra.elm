@@ -35,7 +35,7 @@ module Ginger.Resource.Extra exposing
 
 import Ginger.Id exposing (Id)
 import Ginger.Predicate as Predicate
-import Ginger.Resource as Resource exposing (Resource)
+import Ginger.Resource as Resource exposing (Resource, WithEdges)
 import Ginger.Translation as Translation exposing (Language(..))
 import Iso8601
 import Json.Decode as Decode
@@ -53,7 +53,7 @@ type alias AuthorName =
 
 
 {-| -}
-authorName : Resource -> Maybe AuthorName
+authorName : Resource WithEdges -> Maybe AuthorName
 authorName resource =
     let
         fromProperties edge =
@@ -61,7 +61,7 @@ authorName resource =
                 Decode.decodeValue authorNameFromJson edge.properties
     in
     Maybe.andThen fromProperties <|
-        Maybe.andThen List.head <|
+        List.head <|
             Resource.edgesWithPredicate Predicate.HasAuthor resource
 
 
@@ -83,7 +83,7 @@ type alias EventDate =
 
 
 {-| -}
-eventDate : Resource -> Maybe EventDate
+eventDate : Resource a -> Maybe EventDate
 eventDate resource =
     Result.toMaybe <|
         Decode.decodeValue eventDateFromJson

@@ -2,6 +2,7 @@ module Ginger.Id exposing
     ( Id(..)
     , toString
     , fromJson
+    , toInt
     )
 
 {-|
@@ -29,6 +30,12 @@ import Json.Decode as Decode
 {-| -}
 type Id
     = Id Int
+
+
+{-| -}
+toInt : Id -> Int
+toInt (Id id) =
+    id
 
 
 {-| -}

@@ -1,6 +1,5 @@
 module Ginger.Auth exposing
     ( Status(..)
-    , Identity
     , Method(..)
     , requestLogin
     , requestLogout
@@ -38,7 +37,7 @@ module Ginger.Auth exposing
 
 -}
 
-import Ginger.Resource exposing (Resource)
+import Ginger.Resource exposing (Resource, WithEdges)
 import Http
 import Iso8601
 import Json.Decode as Decode
@@ -53,7 +52,7 @@ import Time
 
 {-| -}
 type Status
-    = Authenticated Identity (Maybe Resource)
+    = Authenticated (Maybe (Resource WithEdges))
     | Anonymous
     | Loading
     | Error Http.Error

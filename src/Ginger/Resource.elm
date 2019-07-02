@@ -1,12 +1,15 @@
 module Ginger.Resource exposing
     ( Resource
     , Block
-    , edges
+    , BlockType(..)
+    , Edge
+    , WithEdges
     , edgesWithPredicate
     , category
     , media
     , depiction
-    , fromJson
+    , fromJsonWithEdges
+    , fromJsonWithoutEdges
     )
 
 {-|
@@ -17,11 +20,13 @@ module Ginger.Resource exposing
 @docs Resource
 
 @docs Block
+@docs BlockType
+@docs Edge
+@docs WithEdges
 
 
 # Query
 
-@docs edges
 @docs edgesWithPredicate
 @docs category
 @docs media
@@ -30,7 +35,8 @@ module Ginger.Resource exposing
 
 # Decode
 
-@docs fromJson
+@docs fromJsonWithEdges
+@docs fromJsonWithoutEdges
 
 -}
 
@@ -51,40 +57,51 @@ import Time
 
 
 {-| -}
-type alias Resource =
-    { id : Id
-    , title : Translation
-    , body : Translation
-    , summary : Translation
-    , path : String
-    , category : NonEmpty Category
-    , properties : Decode.Value
-    , publicationDate : Maybe Time.Posix
-    , edges : Edges
-    , media : Media
-    , blocks : List Block
+type alias Resource a =
+    { a
+        | id : Id
+        , title : Translation
+        , body : Translation
+        , subtitle : Translation
+        , summary : Translation
+        , path : String
+        , category : NonEmpty Category
+        , properties : Decode.Value
+        , publicationDate : Maybe Time.Posix
+        , media : Media
+        , blocks : List Block
     }
 
 
 {-| -}
-type Edges
-    = NotFetched
-    | Edges (List Edge)
+type alias WithEdges =
+    { edges : List Edge }
 
 
 {-| A named connection to a resource
 -}
-type Edge
-    = Edge Predicate Resource
+type alias Edge =
+    { predicate : Predicate
+    , resource : Resource {}
+    }
 
 
 {-| -}
 type alias Block =
-    { resourceId : Maybe Id
-    , type_ : String
-    , body : Translation
+    { body : Translation
     , name : String
+    , type_ : BlockType
+    , relatedRscId : Maybe Id
+    , properties : Decode.Value
     }
+
+
+{-| -}
+type BlockType
+    = Text
+    | Header
+    | Page
+    | Custom String
 
 
 
@@ -92,110 +109,140 @@ type alias Block =
 
 
 {-| -}
-edges : Resource -> Maybe (List Resource)
-edges resource =
-    case resource.edges of
-        NotFetched ->
-            Nothing
-
-        Edges xs ->
-            Just (List.map (\(Edge _ r) -> r) xs)
-
-
-{-| -}
-edgesWithPredicate : Predicate -> Resource -> Maybe (List Resource)
+edgesWithPredicate : Predicate -> Resource WithEdges -> List (Resource {})
 edgesWithPredicate predicate resource =
-    case resource.edges of
-        NotFetched ->
-            Nothing
-
-        Edges xs ->
-            let
-                filter (Edge p r) =
-                    if p == predicate then
-                        Just r
-
-                    else
-                        Nothing
-            in
-            Just (List.filterMap filter xs)
+    List.map .resource <|
+        List.filter ((==) predicate << .predicate) resource.edges
 
 
 {-| -}
-category : Resource -> Category
+category : Resource a -> Category
 category =
     List.NonEmpty.head << .category
 
 
 {-| -}
-media : Predicate -> Media.MediaClass -> Resource -> Maybe (List String)
-media predicate imageClass resource =
-    Maybe.map (List.filterMap (Media.url imageClass << .media)) <|
+media : Predicate -> Resource WithEdges -> List Media
+media predicate resource =
+    List.map .media <|
         edgesWithPredicate predicate resource
 
 
 {-| -}
-depiction : Media.MediaClass -> Resource -> Maybe String
-depiction imageClass resource =
-    Maybe.andThen List.head <|
-        media Predicate.HasDepiction imageClass resource
+depiction : Media.MediaClass -> Resource WithEdges -> Maybe String
+depiction mediaClass resource =
+    Maybe.andThen (Media.imageUrl mediaClass) <|
+        List.head <|
+            media Predicate.HasDepiction resource
 
 
 
 -- DECODE
 
 
-type alias IncludeEdges =
-    Bool
-
-
 {-| -}
-fromJson : Decode.Decoder Resource
-fromJson =
-    decodeResource True
-
-
-decodeResource : IncludeEdges -> Decode.Decoder Resource
-decodeResource includeEdges =
+fromJsonWithEdges : Decode.Decoder (Resource WithEdges)
+fromJsonWithEdges =
     let
-        edgesDecoder =
-            if includeEdges then
-                decodeEdges
-
-            else
-                Decode.succeed NotFetched
+        resourceWithEdges a b c d e f g h i j k l =
+            { id = a
+            , title = b
+            , body = c
+            , subtitle = d
+            , summary = e
+            , path = f
+            , category = g
+            , properties = h
+            , publicationDate = i
+            , media = j
+            , blocks = k
+            , edges = l
+            }
     in
-    Decode.succeed Resource
+    Decode.succeed resourceWithEdges
         |> Pipeline.required "id" Id.fromJson
         |> Pipeline.required "title" Translation.fromJson
         |> Pipeline.required "body" Translation.fromJson
+        |> Pipeline.required "subtitle" Translation.fromJson
         |> Pipeline.required "summary" Translation.fromJson
         |> Pipeline.required "path" Decode.string
         |> Pipeline.required "categories" Category.fromJson
         |> Pipeline.required "properties" Decode.value
         |> Pipeline.required "publication_date" (Decode.maybe Iso8601.decoder)
-        |> Pipeline.optional "edges" edgesDecoder NotFetched
+        |> Pipeline.optional "media" Media.fromJson Media.empty
+        |> Pipeline.required "blocks" (Decode.list decodeBlock)
+        |> Pipeline.optional "edges" decodeEdges []
+
+
+{-| -}
+fromJsonWithoutEdges : Decode.Decoder (Resource {})
+fromJsonWithoutEdges =
+    let
+        resourceWithoutEdges a b c d e f g h i j k =
+            { id = a
+            , title = b
+            , body = c
+            , subtitle = d
+            , summary = e
+            , path = f
+            , category = g
+            , properties = h
+            , publicationDate = i
+            , media = j
+            , blocks = k
+            }
+    in
+    Decode.succeed resourceWithoutEdges
+        |> Pipeline.required "id" Id.fromJson
+        |> Pipeline.required "title" Translation.fromJson
+        |> Pipeline.required "body" Translation.fromJson
+        |> Pipeline.required "subtitle" Translation.fromJson
+        |> Pipeline.required "summary" Translation.fromJson
+        |> Pipeline.required "path" Decode.string
+        |> Pipeline.required "categories" Category.fromJson
+        |> Pipeline.required "properties" Decode.value
+        |> Pipeline.required "publication_date" (Decode.maybe Iso8601.decoder)
         |> Pipeline.optional "media" Media.fromJson Media.empty
         |> Pipeline.required "blocks" (Decode.list decodeBlock)
 
 
-decodeEdges : Decode.Decoder Edges
+decodeEdges : Decode.Decoder (List Edge)
 decodeEdges =
-    Decode.map Edges <|
-        Decode.list (Decode.lazy (\_ -> decodeEdge))
+    Decode.list decodeEdge
 
 
 decodeEdge : Decode.Decoder Edge
 decodeEdge =
     Decode.succeed Edge
         |> Pipeline.required "predicate_name" Predicate.fromJson
-        |> Pipeline.required "resource" (decodeResource False)
+        |> Pipeline.required "resource" fromJsonWithoutEdges
 
 
 decodeBlock : Decode.Decoder Block
 decodeBlock =
     Decode.succeed Block
-        |> Pipeline.required "rsc_id" (Decode.nullable Id.fromJson)
-        |> Pipeline.required "type" Decode.string
         |> Pipeline.required "body" Translation.fromJson
         |> Pipeline.required "name" Decode.string
+        |> Pipeline.required "type" decodeBlockType
+        |> Pipeline.required "rsc_id" (Decode.maybe Id.fromJson)
+        |> Pipeline.required "properties" Decode.value
+
+
+decodeBlockType : Decode.Decoder BlockType
+decodeBlockType =
+    let
+        toBlockType type_ =
+            case type_ of
+                "page" ->
+                    Page
+
+                "text" ->
+                    Text
+
+                "header" ->
+                    Header
+
+                other ->
+                    Custom other
+    in
+    Decode.map toBlockType Decode.string

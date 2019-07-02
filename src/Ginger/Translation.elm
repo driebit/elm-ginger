@@ -2,6 +2,7 @@ module Ginger.Translation exposing
     ( Translation
     , Language(..)
     , toString
+    , withDefault
     , fromList
     , toIso639
     , text
@@ -21,6 +22,7 @@ module Ginger.Translation exposing
 # Conversion
 
 @docs toString
+@docs withDefault
 @docs fromList
 @docs toIso639
 
@@ -39,6 +41,7 @@ module Ginger.Translation exposing
 
 import Dict exposing (Dict)
 import Html exposing (..)
+import Html.Lazy as Lazy
 import Json.Decode as Decode
 import Markdown exposing (defaultOptions)
 
@@ -72,6 +75,18 @@ toString : Language -> Translation -> String
 toString language (Translation translation) =
     Maybe.withDefault "" <|
         Dict.get (toIso639 language) translation
+
+
+{-| Get the translated String value.
+
+_Attempt fallback if translated value is missing, defaults to an empty String._
+
+-}
+withDefault : Language -> Language -> Translation -> String
+withDefault def language (Translation translation) =
+    Dict.get (toIso639 language) translation
+        |> Maybe.withDefault
+            (Maybe.withDefault "" (Dict.get (toIso639 def) translation))
 
 
 {-| Construct a Translation from a list of Language and String value pairs
@@ -111,8 +126,15 @@ text language translation =
 -}
 html : Language -> Translation -> Html msg
 html language translation =
-    Markdown.toHtmlWith { defaultOptions | sanitize = False } [] <|
-        toString language translation
+    Lazy.lazy html_ (toString language translation)
+
+
+{-| Prevent re-render on calling elm-update
+<https://github.com/elm-explorations/markdown/issues/3>
+-}
+html_ : String -> Html msg
+html_ =
+    Markdown.toHtmlWith { defaultOptions | sanitize = False } []
 
 
 

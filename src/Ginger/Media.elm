@@ -1,8 +1,10 @@
 module Ginger.Media exposing
-    ( Media
+    ( Media(..)
     , MediaClass(..)
+    , VideoData
     , empty
-    , url
+    , imageUrl
+    , videoData
     , imageClassToString
     , fromJson
     )
@@ -14,12 +16,14 @@ module Ginger.Media exposing
 
 @docs Media
 @docs MediaClass
+@docs VideoData
 
 
 # Build & Query
 
 @docs empty
-@docs url
+@docs imageUrl
+@docs videoData
 @docs imageClassToString
 
 
@@ -40,7 +44,9 @@ import Json.Decode.Pipeline as Pipeline
 
 {-| -}
 type Media
-    = Media (Dict String String)
+    = Image (Dict String String)
+    | Video VideoData
+    | Empty
 
 
 {-| -}
@@ -55,6 +61,14 @@ type MediaClass
     | Custom String
 
 
+{-| -}
+type alias VideoData =
+    { embedCode : String
+    , width : Int
+    , height : Int
+    }
+
+
 
 -- DECODE
 
@@ -63,13 +77,21 @@ type MediaClass
 fromJson : Decode.Decoder Media
 fromJson =
     let
-        decoder =
-            Decode.succeed Tuple.pair
-                |> Pipeline.required "mediaclass" Decode.string
-                |> Pipeline.required "url" Decode.string
+        imageDecoder =
+            Decode.map (Image << Dict.fromList) <|
+                Decode.list <|
+                    Decode.map2 Tuple.pair
+                        (Decode.field "mediaclass" Decode.string)
+                        (Decode.field "url" Decode.string)
+
+        videoDecoder =
+            Decode.map Video <|
+                Decode.map3 VideoData
+                    (Decode.field "url" Decode.string)
+                    (Decode.field "width" Decode.int)
+                    (Decode.field "height" Decode.int)
     in
-    Decode.map (Media << Dict.fromList) <|
-        Decode.list decoder
+    Decode.oneOf [ imageDecoder, videoDecoder ]
 
 
 
@@ -79,19 +101,41 @@ fromJson =
 {-| -}
 empty : Media
 empty =
-    Media Dict.empty
+    Empty
 
 
 {-| -}
-url : MediaClass -> Media -> Maybe String
-url imageClass (Media media) =
-    Dict.get (imageClassToString imageClass) media
+imageUrl : MediaClass -> Media -> Maybe String
+imageUrl mediaClass media =
+    case media of
+        Image info ->
+            Dict.get (imageClassToString mediaClass) info
+
+        Video _ ->
+            Nothing
+
+        Empty ->
+            Nothing
+
+
+{-| -}
+videoData : MediaClass -> Media -> Maybe VideoData
+videoData mediaClass media =
+    case media of
+        Video data ->
+            Just data
+
+        Image info ->
+            Nothing
+
+        Empty ->
+            Nothing
 
 
 {-| -}
 imageClassToString : MediaClass -> String
-imageClassToString imageClass =
-    case imageClass of
+imageClassToString mediaClass =
+    case mediaClass of
         Avatar ->
             "avatar"
 

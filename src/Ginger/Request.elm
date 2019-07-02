@@ -1,7 +1,10 @@
-module Ginger.Search exposing
+module Ginger.Request exposing
     ( Results
-    , requestResources
-    , requestLocations
+    , resourceById
+    , resourceByPath
+    , resourceByName
+    , resourceQuery
+    , locationQuery
     , QueryParam(..)
     , Ordering(..)
     , SortField(..)
@@ -19,24 +22,30 @@ module Ginger.Search exposing
 
 # Http
 
+@docs resourceById
+@docs resourceByPath
+@docs resourceByName
+@docs resourceQuery
+@docs locationQuery
+
+
+# Http
+
     import Ginger.Resource exposing (Category, Resource)
-    import Ginger.Rest exposing (requestResources)
+    import Ginger.Rest exposing (resourceQuery)
     import Http
 
     query : String -> Http.Request Http.Error (List Resource)
     query term =
-        requestResources [ text term ]
+        resourceQuery [ text term ]
 
     events : Http.Request Http.Error (List Resource)
     events =
-        requestResources
+        resourceQuery
             [ upcoming
             , hasCategory Event
             , sortBy StartData Asc
             ]
-
-@docs requestResources
-@docs requestLocations
 
 @docs QueryParam
 
@@ -49,7 +58,7 @@ module Ginger.Search exposing
 -}
 
 import Ginger.Category as Category exposing (Category)
-import Ginger.Resource as Resource exposing (Resource)
+import Ginger.Resource as Resource exposing (Resource, WithEdges)
 import Ginger.Resource.Extra as Extra exposing (Location)
 import Http
 import Json.Decode as Decode
@@ -71,31 +80,88 @@ type alias Results a =
 
 
 
+-- URL
+
+
+absolute : List String -> List Url.Builder.QueryParameter -> String
+absolute path queryParams =
+    Url.Builder.absolute ([ "data", "resources" ] ++ path) queryParams
+
+
+
 -- REQUESTS
 
 
 {-|
 
-    requestResources : Http.Request Http.Error (List Resource)
-    requestResources =
-        requestResources []
+    request : Http.Request Http.Error Resource
+    request =
+        resourceById 242
 
 -}
-requestResources : (Result Http.Error (Results Resource) -> msg) -> List QueryParam -> Cmd msg
-requestResources msg queryParams =
+resourceById : (Result Http.Error (Resource WithEdges) -> msg) -> Int -> Cmd msg
+resourceById msg id =
+    Http.get
+        { url = absolute [ String.fromInt id ] []
+        , expect = Http.expectJson msg Resource.fromJsonWithEdges
+        }
+
+
+{-|
+
+    request : Http.Request Http.Error Resource
+    request =
+        resourceByPath "/news"
+
+-}
+resourceByPath : (Result Http.Error (Resource WithEdges) -> msg) -> String -> Cmd msg
+resourceByPath msg path =
+    Http.get
+        { url = absolute [ "path", Url.percentEncode path ] []
+        , expect = Http.expectJson msg Resource.fromJsonWithEdges
+        }
+
+
+{-|
+
+    request : Http.Request Http.Error Resource
+    request =
+        resourceByName "home"
+
+-}
+resourceByName : (Result Http.Error (Resource WithEdges) -> msg) -> String -> Cmd msg
+resourceByName msg id =
+    Http.get
+        { url = absolute [ id ] []
+        , expect = Http.expectJson msg Resource.fromJsonWithEdges
+        }
+
+
+{-|
+
+    request : Http.Request Http.Error (List Resource)
+    request =
+        resourceQuery []
+
+-}
+resourceQuery :
+    (Result Http.Error (Results (Resource WithEdges)) -> msg)
+    -> List QueryParam
+    -> Cmd msg
+resourceQuery msg queryParams =
     Http.get
         { url =
             Url.Builder.absolute [ "data", "search" ] <|
                 queryParamsToBuilder queryParams
         , expect =
             Http.expectJson msg <|
-                fromJson (Decode.list Resource.fromJson)
+                fromJson (Decode.list Resource.fromJsonWithEdges)
         }
 
 
 {-| -}
-requestLocations : (Result Http.Error (Results Location) -> msg) -> List QueryParam -> Cmd msg
-requestLocations msg queryParams =
+locationQuery : (Result Http.Error (Results Location) -> msg) -> List QueryParam -> Cmd msg
+locationQuery msg queryParams =
     Http.get
         { url =
             Url.Builder.absolute [ "data", "search", "coordinates" ] <|
