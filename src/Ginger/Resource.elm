@@ -79,7 +79,7 @@ type alias WithEdges =
 
 
 {-| A named connection to a resource. The `Resource` doesn't
-have any edges because the Ginger rest api only includes edges
+have any edges because the current Ginger api only includes edges
 one level deep.
 -}
 type alias Edge =
