@@ -36,7 +36,7 @@ Here are some examples of how you might get Ginger resources.
         Request.resourceQuery GotEvents
             [ Upcoming
             , HasCategory Event
-            , SortBy StartData Asc
+            , SortBy StartDate Asc
             ]
 
 @docs resourceById
@@ -179,7 +179,8 @@ locationQuery msg queryParams =
 -- QUERYPARAMS
 
 
-{-| -}
+{-| Some of these params only work if `mod_elasticsearch` is enabled
+-}
 type QueryParam
     = ExcludeCategory Category
     | Facet String
@@ -254,16 +255,16 @@ toUrlParam queryParam =
             Url.Builder.string "text" text
 
         SortBy PublicationDate Asc ->
-            Url.Builder.string "sort" "+rsc.publication_start"
+            Url.Builder.string "sort" "rsc.publication_start"
 
         SortBy PublicationDate Desc ->
             Url.Builder.string "sort" "-rsc.publication_start"
 
         SortBy StartDate Asc ->
-            Url.Builder.string "sort" "+rsc.date_start"
+            Url.Builder.string "sort" "rsc.pivot_date_start"
 
         SortBy StartDate Desc ->
-            Url.Builder.string "sort" "-rsc.date_start"
+            Url.Builder.string "sort" "-rsc.pivot_date_start"
 
         IsUpcoming ->
             Url.Builder.string "upcoming" "true"

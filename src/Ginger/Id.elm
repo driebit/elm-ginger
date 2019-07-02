@@ -2,6 +2,7 @@ module Ginger.Id exposing
     ( ResourceId
     , toInt
     , toString
+    , fromUrl
     , fromJson
     )
 
@@ -21,12 +22,14 @@ module Ginger.Id exposing
 
 # Decode
 
+@docs fromUrl
 @docs fromJson
 
 -}
 
 import Json.Decode as Decode
 import Tagged exposing (Tagged)
+import Url.Parser as Url
 
 
 {-| -}
@@ -48,6 +51,12 @@ toInt =
 toString : ResourceId -> String
 toString =
     String.fromInt << Tagged.untag
+
+
+{-| -}
+fromUrl : Url.Parser (ResourceId -> a) a
+fromUrl =
+    Url.map Tagged.tag Url.int
 
 
 {-| -}
