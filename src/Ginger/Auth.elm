@@ -1,5 +1,6 @@
 module Ginger.Auth exposing
     ( Status(..)
+    , Identity
     , Method(..)
     , requestLogin
     , requestLogout
@@ -52,7 +53,7 @@ import Time
 
 {-| -}
 type Status
-    = Authenticated (Maybe (Resource WithEdges))
+    = Authenticated Identity (Maybe (Resource WithEdges))
     | Anonymous
     | Loading
     | Error Http.Error
@@ -179,7 +180,7 @@ fromJson : Decode.Decoder Status
 fromJson =
     Decode.succeed Authenticated
         |> Pipeline.required "identity" identityFromJson
-        |> Pipeline.optional "resource" (Decode.maybe Ginger.Resource.fromJson) Nothing
+        |> Pipeline.optional "resource" (Decode.maybe Ginger.Resource.fromJsonWithEdges) Nothing
 
 
 {-| Decode a Ginger identity json value to an Identity record
