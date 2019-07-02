@@ -1,13 +1,13 @@
 module Ginger.Resource exposing
     ( Resource
+    , WithEdges
+    , Edge
     , Block
     , BlockType(..)
-    , Edge
-    , WithEdges
     , edgesWithPredicate
     , category
-    , media
     , depiction
+    , depictions
     , fromJsonWithEdges
     , fromJsonWithoutEdges
     )
@@ -19,18 +19,18 @@ module Ginger.Resource exposing
 
 @docs Resource
 
+@docs WithEdges
+@docs Edge
 @docs Block
 @docs BlockType
-@docs Edge
-@docs WithEdges
 
 
 # Query
 
 @docs edgesWithPredicate
 @docs category
-@docs media
 @docs depiction
+@docs depictions
 
 
 # Decode
@@ -41,7 +41,7 @@ module Ginger.Resource exposing
 -}
 
 import Ginger.Category as Category exposing (Category(..))
-import Ginger.Id as Id exposing (Id)
+import Ginger.Id as Id exposing (ResourceId)
 import Ginger.Media as Media exposing (Media)
 import Ginger.Predicate as Predicate exposing (Predicate(..))
 import Ginger.Translation as Translation exposing (Translation)
@@ -59,7 +59,7 @@ import Time
 {-| -}
 type alias Resource a =
     { a
-        | id : Id
+        | id : ResourceId
         , title : Translation
         , body : Translation
         , subtitle : Translation
@@ -78,7 +78,9 @@ type alias WithEdges =
     { edges : List Edge }
 
 
-{-| A named connection to a resource
+{-| A named connection to a resource. The `Resource` doesn't
+have any edges because the Ginger rest api only includes edges
+one level deep.
 -}
 type alias Edge =
     { predicate : Predicate
@@ -91,7 +93,7 @@ type alias Block =
     { body : Translation
     , name : String
     , type_ : BlockType
-    , relatedRscId : Maybe Id
+    , relatedRscId : Maybe ResourceId
     , properties : Decode.Value
     }
 
@@ -122,18 +124,16 @@ category =
 
 
 {-| -}
-media : Predicate -> Resource WithEdges -> List Media
-media predicate resource =
-    List.map .media <|
-        edgesWithPredicate predicate resource
+depiction : Media.MediaClass -> Resource WithEdges -> Maybe String
+depiction mediaClass =
+    List.head << depictions mediaClass
 
 
 {-| -}
-depiction : Media.MediaClass -> Resource WithEdges -> Maybe String
-depiction mediaClass resource =
-    Maybe.andThen (Media.imageUrl mediaClass) <|
-        List.head <|
-            media Predicate.HasDepiction resource
+depictions : Media.MediaClass -> Resource WithEdges -> List String
+depictions mediaClass resource =
+    List.filterMap (Media.imageUrl mediaClass << .media) <|
+        edgesWithPredicate Predicate.HasDepiction resource
 
 
 

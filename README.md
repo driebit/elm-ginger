@@ -10,6 +10,8 @@ Create Elm websites backed by the [Ginger CMS](https://github.com/driebit/ginger
 
 **Ginger.Resource.Extra**: Common datatypes like Author and EventData.
 
+**Ginger.Id**: A tagged version of a Ginger resource id.
+
 **Ginger.Category**: Ginger categories with option to define a custom one.
 
 **Ginger.Predicate**: Ginger predicates with option to define a custom one.
@@ -18,4 +20,4 @@ Create Elm websites backed by the [Ginger CMS](https://github.com/driebit/ginger
 
 **Ginger.Media**: Container for images attached to a resource.
 
-**Ginger.Request**: Get resources and locations.
+**Ginger.Request**: Get and search resources.

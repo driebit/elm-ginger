@@ -15,7 +15,29 @@ module Ginger.Request exposing
 {-|
 
 
-# Http
+# Requests
+
+Here are some examples of how you might get Ginger resources.
+
+    import Ginger.Request as Request
+        exposing
+            ( Ordering(..)
+            , QueryParam(..)
+            , SortField(..)
+            )
+
+    query : Cmd Msg
+    query =
+        Request.resourceQuery GotSearchResults
+            [ Text "amsterdam" ]
+
+    events : Cmd Msg
+    events =
+        Request.resourceQuery GotEvents
+            [ Upcoming
+            , HasCategory Event
+            , SortBy StartData Asc
+            ]
 
 @docs resourceById
 @docs resourceByPath
@@ -24,31 +46,11 @@ module Ginger.Request exposing
 @docs locationQuery
 
 
-# Http
-
-    import Ginger.Resource exposing (Category, Resource)
-    import Ginger.Rest exposing (resourceQuery)
-    import Http
-
-    query : String -> Http.Request Http.Error (List Resource)
-    query term =
-        resourceQuery [ text term ]
-
-    events : Http.Request Http.Error (List Resource)
-    events =
-        resourceQuery
-            [ upcoming
-            , hasCategory Event
-            , sortBy StartData Asc
-            ]
-
-
 # Search
 
 @docs Results
 
 @docs QueryParam
-
 @docs Ordering
 @docs SortField
 @docs Operator
@@ -58,6 +60,7 @@ module Ginger.Request exposing
 -}
 
 import Ginger.Category as Category exposing (Category)
+import Ginger.Id exposing (ResourceId)
 import Ginger.Resource as Resource exposing (Resource, WithEdges)
 import Ginger.Resource.Extra as Extra exposing (Location)
 import Http
@@ -94,15 +97,15 @@ absolute path queryParams =
 
 {-|
 
-    request : (Http.Request Http.Error Resource -> msg) -> Resource.Id -> Cmd msg
+    request : (Http.Request Http.Error Resource -> msg) -> Ginger.Id.ResourceId -> Cmd msg
     request toMsg id =
-        resourceById toMsg id
+        Request.resourceById toMsg id
 
 -}
-resourceById : (Result Http.Error (Resource WithEdges) -> msg) -> Int -> Cmd msg
+resourceById : (Result Http.Error (Resource WithEdges) -> msg) -> ResourceId -> Cmd msg
 resourceById msg id =
     Http.get
-        { url = absolute [ String.fromInt id ] []
+        { url = absolute [ Ginger.Id.toString id ] []
         , expect = Http.expectJson msg Resource.fromJsonWithEdges
         }
 
@@ -111,7 +114,7 @@ resourceById msg id =
 
     request : (Http.Request Http.Error Resource -> msg) -> Cmd msg
     request toMsg =
-        resourceByPath toMsg "/news"
+        Request.resourceByPath toMsg "/news"
 
 -}
 resourceByPath : (Result Http.Error (Resource WithEdges) -> msg) -> String -> Cmd msg
@@ -126,7 +129,7 @@ resourceByPath msg path =
 
     request : (Http.Request Http.Error Resource -> msg) -> Cmd msg
     request toMsg =
-        resourceByName GotResource toMsg "home"
+        Request.resourceByName toMsg "home"
 
 -}
 resourceByName : (Result Http.Error (Resource WithEdges) -> msg) -> String -> Cmd msg
@@ -141,7 +144,7 @@ resourceByName msg id =
 
     request : Http.Request Http.Error (List Resource)
     request =
-        resourceQuery []
+        Request.resourceQuery [ Text "amsterdam" ]
 
 -}
 resourceQuery :
@@ -178,17 +181,17 @@ locationQuery msg queryParams =
 
 {-| -}
 type QueryParam
-    = HasCategory Category
-    | ExcludeCategory Category
-    | PromoteCategory Category
+    = ExcludeCategory Category
     | Facet String
     | Filter String Operator String
-    | Limit Int
-    | Offset Int
-    | SortBy SortField Ordering
-    | Text String
+    | HasCategory Category
     | IsUnfinished
     | IsUpcoming
+    | Limit Int
+    | Offset Int
+    | PromoteCategory Category
+    | SortBy SortField Ordering
+    | Text String
     | Custom String String
 
 
@@ -214,7 +217,9 @@ type Operator
     | MatchPhrase
 
 
-{-| -}
+{-| Convert this modules `QueryParm` to elm/url `QueryParameter` values
+to use with Url.Builder.
+-}
 queryParamsToBuilder : List QueryParam -> List Url.Builder.QueryParameter
 queryParamsToBuilder =
     List.map toUrlParam

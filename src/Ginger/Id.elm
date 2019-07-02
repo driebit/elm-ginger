@@ -1,8 +1,8 @@
 module Ginger.Id exposing
-    ( Id(..)
+    ( ResourceId
+    , toInt
     , toString
     , fromJson
-    , toInt
     )
 
 {-|
@@ -10,11 +10,12 @@ module Ginger.Id exposing
 
 # Definition
 
-@docs Id
+@docs ResourceId
 
 
 # Convert
 
+@docs toInt
 @docs toString
 
 
@@ -25,26 +26,31 @@ module Ginger.Id exposing
 -}
 
 import Json.Decode as Decode
+import Tagged exposing (Tagged)
 
 
 {-| -}
-type Id
-    = Id Int
+type alias ResourceId =
+    Tagged Resource Int
+
+
+type Resource
+    = Resource
 
 
 {-| -}
-toInt : Id -> Int
-toInt (Id id) =
-    id
+toInt : ResourceId -> Int
+toInt =
+    Tagged.untag
 
 
 {-| -}
-toString : Id -> String
-toString (Id id) =
-    String.fromInt id
+toString : ResourceId -> String
+toString =
+    String.fromInt << Tagged.untag
 
 
 {-| -}
-fromJson : Decode.Decoder Id
+fromJson : Decode.Decoder ResourceId
 fromJson =
-    Decode.map Id Decode.int
+    Decode.map Tagged.tag Decode.int

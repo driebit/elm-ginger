@@ -33,7 +33,7 @@ module Ginger.Resource.Extra exposing
 
 -}
 
-import Ginger.Id exposing (Id)
+import Ginger.Id exposing (ResourceId)
 import Ginger.Predicate as Predicate
 import Ginger.Resource as Resource exposing (Resource, WithEdges)
 import Ginger.Translation as Translation exposing (Language(..))
@@ -100,7 +100,7 @@ eventDateFromJson =
 
 {-| -}
 type alias Location =
-    { id : Id
+    { id : ResourceId
     , lat : Float
     , lng : Float
     }

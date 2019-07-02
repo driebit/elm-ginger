@@ -7,6 +7,7 @@
     "exposed-modules": [
         "Ginger.Resource",
         "Ginger.Resource.Extra",
+        "Ginger.Id",
         "Ginger.Category",
         "Ginger.Predicate",
         "Ginger.Translation",
@@ -23,6 +24,7 @@
         "elm/time": "1.0.0 <= v < 2.0.0",
         "elm/url": "1.0.0 <= v < 2.0.0",
         "elm-explorations/markdown": "1.0.0 <= v < 2.0.0",
+        "joneshf/elm-tagged": "2.1.1 <= v < 3.0.0",
         "rtfeldman/elm-iso8601-date-strings": "1.1.2 <= v < 2.0.0"
     },
     "test-dependencies": {
