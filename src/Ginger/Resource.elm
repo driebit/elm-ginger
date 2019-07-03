@@ -4,10 +4,10 @@ module Ginger.Resource exposing
     , Edge
     , Block
     , BlockType(..)
-    , edgesWithPredicate
     , category
     , depiction
     , depictions
+    , edgesWithPredicate
     , fromJsonWithEdges
     , fromJsonWithoutEdges
     )
@@ -25,12 +25,12 @@ module Ginger.Resource exposing
 @docs BlockType
 
 
-# Query
+# Access data
 
-@docs edgesWithPredicate
 @docs category
 @docs depiction
 @docs depictions
+@docs edgesWithPredicate
 
 
 # Decode
@@ -56,7 +56,26 @@ import Time
 -- DEFINITIONS
 
 
-{-| -}
+{-| An Elm representation of a Ginger resource.
+
+Note the `a` in the record definition, this an extenisble record.
+This means it includes _at least_ all of these fields but may have others
+as well. This let's us reason about if the edges are included in the data,
+compile time. The Ginger REST API includes edges nested only one level deep,
+but since the edges are also resources we can re-use this datatype like
+`Resource {}`. This tells use there are _no_ other fields besides the ones here.
+
+So you'll see this used in functions signatures like:
+
+    Resource WithEdges -- has edges
+
+    Resource {} -- does not have the edges
+
+    Resource a -- might have them but the code I'm writing doesn't really care
+
+_Note: the `Resource {}` might actually have edges, they are just not fetched._
+
+-}
 type alias Resource a =
     { a
         | id : ResourceId
@@ -73,14 +92,29 @@ type alias Resource a =
     }
 
 
-{-| -}
+{-| The record we use to extend `Resource a`.
+
+You can render a list of resource depictions like so:
+
+    viewDepictions : Resource WithEdges -> List (Html msg)
+    viewDepictions resource =
+        List.map viewImage <|
+            depictions Media.Medium resource
+
+This next example won't compile because you need a `Resource WithEdges`
+and this signature indicates they are missing.
+
+    viewDepictions : Resource {} -> List (Html msg)
+    viewDepictions resource =
+        List.map viewImage <|
+            depictions Media.Medium resource
+
+-}
 type alias WithEdges =
     { edges : List Edge }
 
 
-{-| A named connection to a resource. The `Resource` doesn't
-have any edges because the current Ginger api only includes edges
-one level deep.
+{-| A connection to a resource named by `Predicate`
 -}
 type alias Edge =
     { predicate : Predicate
@@ -110,26 +144,30 @@ type BlockType
 -- QUERY
 
 
-{-| -}
+{-| Return all edges with a given predicate.
+-}
 edgesWithPredicate : Predicate -> Resource WithEdges -> List (Resource {})
 edgesWithPredicate predicate resource =
     List.map .resource <|
         List.filter ((==) predicate << .predicate) resource.edges
 
 
-{-| -}
+{-| The category of a `Resource`.
+-}
 category : Resource a -> Category
 category =
     List.NonEmpty.head << .category
 
 
-{-| -}
+{-| The image url of the `Resource` depiction.
+-}
 depiction : Media.MediaClass -> Resource WithEdges -> Maybe String
 depiction mediaClass =
     List.head << depictions mediaClass
 
 
-{-| -}
+{-| The image urls of the `Resource` depictions
+-}
 depictions : Media.MediaClass -> Resource WithEdges -> List String
 depictions mediaClass resource =
     List.filterMap (Media.imageUrl mediaClass << .media) <|
