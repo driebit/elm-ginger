@@ -65,13 +65,13 @@ compile time. The Ginger REST API includes edges nested only one level deep,
 but since the edges are also resources we can re-use this datatype like
 `Resource {}`. This tells use there are _no_ other fields besides the ones here.
 
-So you'll see this used in functions signatures like:
+So you'll see this used in function signatures like:
 
     Resource WithEdges -- has edges
 
     Resource {} -- does not have the edges
 
-    Resource a -- might have them but the code I'm writing doesn't really care
+    Resource a -- might have them but the code that's using this doesn't really care
 
 _Note: the `Resource {}` might actually have edges, they are just not fetched._
 
