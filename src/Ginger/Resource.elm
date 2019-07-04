@@ -60,7 +60,7 @@ import Time
 
 Note the `a` in the record definition, this an extensible record.
 This means it includes _at least_ all of these fields but may have others
-as well. This let's us reason about if the edges are included in the data,
+as well. This lets us reason about whether the edges are included in the data,
 compile time. The Ginger REST API includes edges nested only one level deep,
 but since the edges are also resources we can re-use this datatype like
 `Resource {}`. This tells use there are _no_ other fields besides the ones here.
