@@ -162,8 +162,8 @@ Every resource has _one_ category, but can be part of a hierarchy of other
 categories. For example `news` is part of `text > article > news`. This function
 will always return the `Category` stored with the `Resource`.
 
-`Note: there hasn't been the need to expose any of the parent categories so far,
-if there is please file an issue.`
+_Note: there hasn't been the need to expose any of the parent categories so far,
+if there is please file an issue._
 
 -}
 category : Resource a -> Category

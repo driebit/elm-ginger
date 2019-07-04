@@ -2,10 +2,10 @@ module Ginger.Media exposing
     ( Media(..)
     , MediaClass(..)
     , VideoData
-    , empty
     , imageUrl
     , videoData
     , imageClassToString
+    , empty
     , fromJson
     )
 
@@ -21,10 +21,10 @@ module Ginger.Media exposing
 
 # Build & Query
 
-@docs empty
 @docs imageUrl
 @docs videoData
 @docs imageClassToString
+@docs empty
 
 
 # Decode
@@ -70,41 +70,11 @@ type alias VideoData =
 
 
 
--- DECODE
-
-
-{-| -}
-fromJson : Decode.Decoder Media
-fromJson =
-    let
-        imageDecoder =
-            Decode.map (Image << Dict.fromList) <|
-                Decode.list <|
-                    Decode.map2 Tuple.pair
-                        (Decode.field "mediaclass" Decode.string)
-                        (Decode.field "url" Decode.string)
-
-        videoDecoder =
-            Decode.map Video <|
-                Decode.map3 VideoData
-                    (Decode.field "url" Decode.string)
-                    (Decode.field "width" Decode.int)
-                    (Decode.field "height" Decode.int)
-    in
-    Decode.oneOf [ imageDecoder, videoDecoder ]
-
-
-
 -- OTHER
 
 
-{-| -}
-empty : Media
-empty =
-    Empty
-
-
-{-| -}
+{-| The image url with a given `MediaClass`
+-}
 imageUrl : MediaClass -> Media -> Maybe String
 imageUrl mediaClass media =
     case media of
@@ -118,14 +88,15 @@ imageUrl mediaClass media =
             Nothing
 
 
-{-| -}
+{-| The video data.
+-}
 videoData : Media -> Maybe VideoData
 videoData media =
     case media of
         Video data ->
             Just data
 
-        Image info ->
+        Image _ ->
             Nothing
 
         Empty ->
@@ -159,3 +130,35 @@ imageClassToString mediaClass =
 
         Custom custom ->
             custom
+
+
+{-| -}
+empty : Media
+empty =
+    Empty
+
+
+
+-- DECODE
+
+
+{-| Decode image and video data
+-}
+fromJson : Decode.Decoder Media
+fromJson =
+    let
+        imageDecoder =
+            Decode.map (Image << Dict.fromList) <|
+                Decode.list <|
+                    Decode.map2 Tuple.pair
+                        (Decode.field "mediaclass" Decode.string)
+                        (Decode.field "url" Decode.string)
+
+        videoDecoder =
+            Decode.map Video <|
+                Decode.map3 VideoData
+                    (Decode.field "url" Decode.string)
+                    (Decode.field "width" Decode.int)
+                    (Decode.field "height" Decode.int)
+    in
+    Decode.oneOf [ imageDecoder, videoDecoder ]
