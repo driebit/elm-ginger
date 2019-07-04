@@ -58,7 +58,7 @@ import Time
 
 {-| An Elm representation of a Ginger resource.
 
-Note the `a` in the record definition, this an extenisble record.
+Note the `a` in the record definition, this an extensible record.
 This means it includes _at least_ all of these fields but may have others
 as well. This let's us reason about if the edges are included in the data,
 compile time. The Ginger REST API includes edges nested only one level deep,
