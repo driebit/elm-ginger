@@ -4,10 +4,10 @@ module Ginger.Resource exposing
     , Edge
     , Block
     , BlockType(..)
-    , edgesWithPredicate
     , category
     , depiction
     , depictions
+    , edgesWithPredicate
     , fromJsonWithEdges
     , fromJsonWithoutEdges
     )
@@ -25,12 +25,12 @@ module Ginger.Resource exposing
 @docs BlockType
 
 
-# Query
+# Access data
 
-@docs edgesWithPredicate
 @docs category
 @docs depiction
 @docs depictions
+@docs edgesWithPredicate
 
 
 # Decode
@@ -56,7 +56,26 @@ import Time
 -- DEFINITIONS
 
 
-{-| -}
+{-| An Elm representation of a Ginger resource.
+
+Note the `a` in the record definition, this an extensible record.
+This means it includes _at least_ all of these fields but may have others
+as well. This lets us reason about whether the edges are included in the data,
+compile time. The Ginger REST API includes edges nested only one level deep,
+but since the edges are also resources we can re-use this datatype like
+`Resource {}`. This tells use there are _no_ other fields besides the ones here.
+
+So you'll see this used in function signatures like:
+
+    Resource WithEdges -- has edges
+
+    Resource {} -- does not have the edges
+
+    Resource a -- might have them but the code that's using this doesn't really care
+
+_Note: the `Resource {}` might actually have edges, they are just not fetched._
+
+-}
 type alias Resource a =
     { a
         | id : ResourceId
@@ -73,14 +92,29 @@ type alias Resource a =
     }
 
 
-{-| -}
+{-| The record we use to extend `Resource a`.
+
+You can render a list of resource depictions like so:
+
+    viewDepictions : Resource WithEdges -> List (Html msg)
+    viewDepictions resource =
+        List.map viewImage <|
+            depictions Media.Medium resource
+
+This next example won't compile because you need a `Resource WithEdges`
+and this signature indicates they are missing.
+
+    viewDepictions : Resource {} -> List (Html msg)
+    viewDepictions resource =
+        List.map viewImage <|
+            depictions Media.Medium resource
+
+-}
 type alias WithEdges =
     { edges : List Edge }
 
 
-{-| A named connection to a resource. The `Resource` doesn't
-have any edges because the current Ginger api only includes edges
-one level deep.
+{-| A connection to a resource named by `Predicate`
 -}
 type alias Edge =
     { predicate : Predicate
@@ -110,26 +144,48 @@ type BlockType
 -- QUERY
 
 
-{-| -}
+{-| Return all edges with a given predicate.
+
+The returned resources won't have any edges themselves, indicated by the `{}`
+in `Resource {}`.
+
+-}
 edgesWithPredicate : Predicate -> Resource WithEdges -> List (Resource {})
 edgesWithPredicate predicate resource =
     List.map .resource <|
         List.filter ((==) predicate << .predicate) resource.edges
 
 
-{-| -}
+{-| The category of a `Resource`.
+
+Every resource has _one_ category, but can be part of a hierarchy of other
+categories. For example `news` is part of `text > article > news`. This function
+will always return the `Category` stored with the `Resource`.
+
+_Note: there hasn't been the need to expose any of the parent categories so far,
+if there is please file an issue._
+
+-}
 category : Resource a -> Category
 category =
     List.NonEmpty.head << .category
 
 
-{-| -}
+{-| The image url of the `Resource` depiction.
+
+Returns the image url if there is a depiction _and_ the mediaclass exists.
+
+-}
 depiction : Media.MediaClass -> Resource WithEdges -> Maybe String
 depiction mediaClass =
     List.head << depictions mediaClass
 
 
-{-| -}
+{-| The image urls of the `Resource` depictions
+
+Returns a list of image urls if there is a depiction _and_ the mediaclass exists.
+
+-}
 depictions : Media.MediaClass -> Resource WithEdges -> List String
 depictions mediaClass resource =
     List.filterMap (Media.imageUrl mediaClass << .media) <|
@@ -140,7 +196,8 @@ depictions mediaClass resource =
 -- DECODE
 
 
-{-| -}
+{-| Decode a `Resource` that has edges.
+-}
 fromJsonWithEdges : Decode.Decoder (Resource WithEdges)
 fromJsonWithEdges =
     let
@@ -174,7 +231,8 @@ fromJsonWithEdges =
         |> Pipeline.optional "edges" decodeEdges []
 
 
-{-| -}
+{-| Decode a `Resource` that does not have edges.
+-}
 fromJsonWithoutEdges : Decode.Decoder (Resource {})
 fromJsonWithoutEdges =
     let
