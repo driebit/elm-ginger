@@ -145,6 +145,10 @@ type BlockType
 
 
 {-| Return all edges with a given predicate.
+
+The returned resources won't have any edges themselves, indicated by the `{}`
+in `Resource {}`.
+
 -}
 edgesWithPredicate : Predicate -> Resource WithEdges -> List (Resource {})
 edgesWithPredicate predicate resource =
@@ -153,6 +157,14 @@ edgesWithPredicate predicate resource =
 
 
 {-| The category of a `Resource`.
+
+Every resource has _one_ category, but can be part of a hierarchy of other
+categories. For example `news` is part of `text > article > news`. This function
+will always return the `Category` stored with the `Resource`.
+
+`Note: there hasn't been the need to expose any of the parent categories so far,
+if there is please file an issue.`
+
 -}
 category : Resource a -> Category
 category =
@@ -160,6 +172,9 @@ category =
 
 
 {-| The image url of the `Resource` depiction.
+
+Returns the image url if there is a depiction _and_ the mediaclass exists.
+
 -}
 depiction : Media.MediaClass -> Resource WithEdges -> Maybe String
 depiction mediaClass =
@@ -167,6 +182,9 @@ depiction mediaClass =
 
 
 {-| The image urls of the `Resource` depictions
+
+Returns a list of image urls if there is a depiction _and_ the mediaclass exists.
+
 -}
 depictions : Media.MediaClass -> Resource WithEdges -> List String
 depictions mediaClass resource =
@@ -178,7 +196,8 @@ depictions mediaClass resource =
 -- DECODE
 
 
-{-| -}
+{-| Decode a `Resource` that has edges.
+-}
 fromJsonWithEdges : Decode.Decoder (Resource WithEdges)
 fromJsonWithEdges =
     let
@@ -212,7 +231,8 @@ fromJsonWithEdges =
         |> Pipeline.optional "edges" decodeEdges []
 
 
-{-| -}
+{-| Decode a `Resource` that does not have edges.
+-}
 fromJsonWithoutEdges : Decode.Decoder (Resource {})
 fromJsonWithoutEdges =
     let
