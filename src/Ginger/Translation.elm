@@ -42,8 +42,9 @@ module Ginger.Translation exposing
 import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Lazy as Lazy
+import Html.Parser
+import Html.Parser.Util
 import Json.Decode as Decode
-import Markdown exposing (defaultOptions)
 
 
 
@@ -131,12 +132,21 @@ html language translation =
     Lazy.lazy html_ (toString language translation)
 
 
-{-| Prevent re-render on calling elm-update
-<https://github.com/elm-explorations/markdown/issues/3>
--}
 html_ : String -> Html msg
-html_ =
-    Markdown.toHtmlWith { defaultOptions | sanitize = False } []
+html_ s =
+    let
+        parsedString =
+            Result.map Html.Parser.Util.toVirtualDom <|
+                Html.Parser.run s
+    in
+    case parsedString of
+        Err err ->
+            -- TODO: Remove wrapping div in the next major release
+            div [] [ Html.text "Html could not be parsed" ]
+
+        Ok ok ->
+            -- TODO: Remove wrapping div in the next major release
+            div [] ok
 
 
 
