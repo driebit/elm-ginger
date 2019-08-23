@@ -38,6 +38,11 @@ suite =
                 Html.article [] [ Translation.text NL translation ]
                     |> Query.fromHtml
                     |> Query.has [ text "Hallo" ]
+        , test "Renders a translated text as html and unescapes chars" <|
+            \_ ->
+                Html.article [] [ Translation.text NL escapedTranslation ]
+                    |> Query.fromHtml
+                    |> Query.has [ text "\"Hallo\"" ]
         , test "Renders a translated html as html" <|
             \_ ->
                 Html.article [] [ Translation.html NL htmlTranslation ]
@@ -70,6 +75,13 @@ htmlTranslation : Translation
 htmlTranslation =
     Translation.fromList
         [ ( NL, "<p>Hallo</p>" )
+        ]
+
+
+escapedTranslation : Translation
+escapedTranslation =
+    Translation.fromList
+        [ ( NL, "&quot;Hallo&quot;" )
         ]
 
 

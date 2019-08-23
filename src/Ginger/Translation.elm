@@ -119,10 +119,46 @@ toIso639 language =
 
 
 {-| Translate and render as Html text
+
+We try to unescape the escaped characters but if that fails we'll render the `Translation` as is.
+
+Html elements will be filtered out and the text will be joined with newlines.
+
 -}
 text : Language -> Translation -> Html msg
 text language translation =
-    Html.text (toString language translation)
+    text_ (toString language translation)
+
+
+text_ : String -> Html msg
+text_ s =
+    let
+        textNodes n acc =
+            case n of
+                Html.Parser.Text t ->
+                    t :: acc
+
+                _ ->
+                    acc
+
+        parsedString =
+            Result.map Html.Parser.Util.toVirtualDom <|
+                Result.map (List.singleton << Html.Parser.Text << String.join "\n") <|
+                    Result.map (List.foldr textNodes []) <|
+                        Html.Parser.run s
+    in
+    case parsedString of
+        Err _ ->
+            Html.text s
+
+        Ok [] ->
+            Html.text ""
+
+        {- Because we construct the List ourselves it's impossible
+           to have more than one element in the List
+        -}
+        Ok (ok :: _) ->
+            ok
 
 
 {-| Translate and render as Html markup
@@ -140,7 +176,7 @@ html_ s =
                 Html.Parser.run s
     in
     case parsedString of
-        Err err ->
+        Err _ ->
             -- TODO: Remove wrapping div in the next major release
             div [] [ Html.text "Html could not be parsed" ]
 
