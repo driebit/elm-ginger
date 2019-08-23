@@ -122,7 +122,7 @@ toIso639 language =
 
 We try to unescape the escaped characters but if that fails we'll render the `Translation` as is.
 
-Html elements will be filtered out and the text will be joined with newlines.
+Html elements will be filtered out and the text will be joined with a space char
 
 -}
 text : Language -> Translation -> Html msg
@@ -136,29 +136,24 @@ text_ s =
         textNodes n acc =
             case n of
                 Html.Parser.Text t ->
-                    t :: acc
+                    t ++ " " ++ acc
+
+                Html.Parser.Element _ _ n_ ->
+                    List.foldr textNodes acc n_
 
                 _ ->
                     acc
 
         parsedString =
-            Result.map Html.Parser.Util.toVirtualDom <|
-                Result.map (List.singleton << Html.Parser.Text << String.join "\n") <|
-                    Result.map (List.foldr textNodes []) <|
-                        Html.Parser.run s
+            Result.map (List.foldr textNodes "") <|
+                Html.Parser.run s
     in
     case parsedString of
         Err _ ->
             Html.text s
 
-        Ok [] ->
-            Html.text ""
-
-        {- Because we construct the List ourselves it's impossible
-           to have more than one element in the List
-        -}
-        Ok (ok :: _) ->
-            ok
+        Ok t ->
+            Html.text t
 
 
 {-| Translate and render as Html markup

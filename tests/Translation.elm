@@ -42,7 +42,12 @@ suite =
             \_ ->
                 Html.article [] [ Translation.text NL escapedTranslation ]
                     |> Query.fromHtml
-                    |> Query.has [ text "\"Hallo\"" ]
+                    |> Query.has [ text "\"Hallo\" \"wereld\"" ]
+        , test "Renders a translated text as html unescapes chars and removes nodes" <|
+            \_ ->
+                Html.article [] [ Translation.text NL escapedHtmlTranslation ]
+                    |> Query.fromHtml
+                    |> Query.has [ text "\"Hallo\" \"wereld\"" ]
         , test "Renders a translated html as html" <|
             \_ ->
                 Html.article [] [ Translation.html NL htmlTranslation ]
@@ -81,7 +86,14 @@ htmlTranslation =
 escapedTranslation : Translation
 escapedTranslation =
     Translation.fromList
-        [ ( NL, "&quot;Hallo&quot;" )
+        [ ( NL, "&quot;Hallo&quot; &quot;wereld&quot;" )
+        ]
+
+
+escapedHtmlTranslation : Translation
+escapedHtmlTranslation =
+    Translation.fromList
+        [ ( NL, "<i>&quot;Hallo&quot;</i><b>&quot;wereld&quot;</b>" )
         ]
 
 
