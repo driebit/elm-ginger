@@ -47,7 +47,7 @@ suite =
             \_ ->
                 Html.article [] [ Translation.text NL escapedHtmlTranslation ]
                     |> Query.fromHtml
-                    |> Query.has [ text "\"Hallo\" \"wereld\"" ]
+                    |> Query.has [ text "\"Hallo\"\"wereld\"" ]
         , test "Renders a translated html as html" <|
             \_ ->
                 Html.article [] [ Translation.html NL htmlTranslation ]

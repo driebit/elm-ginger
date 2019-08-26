@@ -136,7 +136,7 @@ text_ s =
         textNodes n acc =
             case n of
                 Html.Parser.Text t ->
-                    t ++ " " ++ acc
+                    t ++ acc
 
                 Html.Parser.Element _ _ n_ ->
                     List.foldr textNodes acc n_
