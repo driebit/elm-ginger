@@ -122,7 +122,7 @@ toIso639 language =
 
 We try to unescape the escaped characters but if that fails we'll render the `Translation` as is.
 
-Html elements will be filtered out and the text will be joined with a space char
+Html elements will be filtered out and the text will be joined.
 
 -}
 text : Language -> Translation -> Html msg
