@@ -53,6 +53,11 @@ suite =
                 Html.article [] [ Translation.text NL escapedHtmlTranslationWithSpace ]
                     |> Query.fromHtml
                     |> Query.has [ text "\"Hallo\" \"wereld\"" ]
+        , test "Renders a translated text as html, preserves unescaped chars" <|
+            \_ ->
+                Html.article [] [ Translation.text NL unescapedHtmlTranslation ]
+                    |> Query.fromHtml
+                    |> Query.has [ text "10 < 100 && 100 < 1000" ]
         , test "Renders a translated html as html" <|
             \_ ->
                 Html.article [] [ Translation.html NL htmlTranslation ]
@@ -106,6 +111,13 @@ escapedHtmlTranslationWithSpace : Translation
 escapedHtmlTranslationWithSpace =
     Translation.fromList
         [ ( NL, "<i>&quot;Hallo&quot;</i> <b>&quot;wereld&quot;</b>" )
+        ]
+
+
+unescapedHtmlTranslation : Translation
+unescapedHtmlTranslation =
+    Translation.fromList
+        [ ( NL, "10 < 100 && 100 < 1000" )
         ]
 
 
