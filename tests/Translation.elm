@@ -60,13 +60,13 @@ suite =
                     |> Query.has [ text "10 < 100 && 100 < 1000" ]
         , test "Renders a translated html as html" <|
             \_ ->
-                Html.article [] [ Translation.html NL htmlTranslation ]
+                Html.article [] (Translation.html NL htmlTranslation)
                     |> Query.fromHtml
                     |> Query.find [ tag "p" ]
                     |> Query.has [ text "Hallo" ]
         , test "Renders error if translated html is invalid" <|
             \_ ->
-                Html.article [] [ Translation.html NL invalidHtml ]
+                Html.article [] (Translation.html NL invalidHtml)
                     |> Query.fromHtml
                     |> Query.has [ text "Html could not be parsed" ]
         ]
