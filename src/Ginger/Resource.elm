@@ -1,6 +1,6 @@
 module Ginger.Resource exposing
-    ( Resource
-    , WithEdges
+    ( ResourceWith
+    , Edges
     , Edge
     , Block
     , BlockType(..)
@@ -17,9 +17,9 @@ module Ginger.Resource exposing
 
 # Definitions
 
-@docs Resource
+@docs ResourceWith
 
-@docs WithEdges
+@docs Edges
 @docs Edge
 @docs Block
 @docs BlockType
@@ -63,20 +63,20 @@ This means it includes _at least_ all of these fields but may have others
 as well. This lets us reason about whether the edges are included in the data,
 compile time. The Ginger REST API includes edges nested only one level deep,
 but since the edges are also resources we can re-use this datatype like
-`Resource {}`. This tells use there are _no_ other fields besides the ones here.
+`ResourceWith {}`. This tells use there are _no_ other fields besides the ones here.
 
 So you'll see this used in function signatures like:
 
-    Resource WithEdges -- has edges
+    ResourceWith Edges -- has edges
 
-    Resource {} -- does not have the edges
+    ResourceWith {} -- does not have the edges
 
-    Resource a -- might have them but the code that's using this doesn't really care
+    ResourceWith a -- might have them but the code that's using this doesn't really care
 
-_Note: the `Resource {}` might actually have edges, they are just not fetched._
+_Note: the `ResourceWith {}` might actually have edges, they are just not fetched._
 
 -}
-type alias Resource a =
+type alias ResourceWith a =
     { a
         | id : ResourceId
         , title : Translation
@@ -92,25 +92,25 @@ type alias Resource a =
     }
 
 
-{-| The record we use to extend `Resource a`.
+{-| The record we use to extend `ResourceWith a`.
 
 You can render a list of resource depictions like so:
 
-    viewDepictions : Resource WithEdges -> List (Html msg)
+    viewDepictions : ResourceWith Edges -> List (Html msg)
     viewDepictions resource =
         List.map viewImage <|
             depictions Media.Medium resource
 
-This next example won't compile because you need a `Resource WithEdges`
+This next example won't compile because you need a `ResourceWith Edges`
 and this signature indicates they are missing.
 
-    viewDepictions : Resource {} -> List (Html msg)
+    viewDepictions : ResourceWith {} -> List (Html msg)
     viewDepictions resource =
         List.map viewImage <|
             depictions Media.Medium resource
 
 -}
-type alias WithEdges =
+type alias Edges =
     { edges : List Edge }
 
 
@@ -118,7 +118,7 @@ type alias WithEdges =
 -}
 type alias Edge =
     { predicate : Predicate
-    , resource : Resource {}
+    , resource : ResourceWith {}
     }
 
 
@@ -147,46 +147,46 @@ type BlockType
 {-| Return all edges with a given predicate.
 
 The returned resources won't have any edges themselves, indicated by the `{}`
-in `Resource {}`.
+in `ResourceWith {}`.
 
 -}
-edgesWithPredicate : Predicate -> Resource WithEdges -> List (Resource {})
+edgesWithPredicate : Predicate -> ResourceWith Edges -> List (ResourceWith {})
 edgesWithPredicate predicate resource =
     List.map .resource <|
         List.filter ((==) predicate << .predicate) resource.edges
 
 
-{-| The category of a `Resource`.
+{-| The category of a `ResourceWith`.
 
 Every resource has _one_ category, but can be part of a hierarchy of other
 categories. For example `news` is part of `text > article > news`. This function
-will always return the `Category` stored with the `Resource`.
+will always return the `Category` stored with the `ResourceWith`.
 
 _Note: there hasn't been the need to expose any of the parent categories so far,
 if there is please file an issue._
 
 -}
-category : Resource a -> Category
+category : ResourceWith a -> Category
 category =
     List.NonEmpty.head << .category
 
 
-{-| The image url of the `Resource` depiction.
+{-| The image url of the `ResourceWith` depiction.
 
 Returns the image url if there is a depiction _and_ the mediaclass exists.
 
 -}
-depiction : Media.MediaClass -> Resource WithEdges -> Maybe String
+depiction : Media.MediaClass -> ResourceWith Edges -> Maybe String
 depiction mediaClass =
     List.head << depictions mediaClass
 
 
-{-| The image urls of the `Resource` depictions
+{-| The image urls of the `ResourceWith` depictions
 
 Returns a list of image urls if there is a depiction _and_ the mediaclass exists.
 
 -}
-depictions : Media.MediaClass -> Resource WithEdges -> List String
+depictions : Media.MediaClass -> ResourceWith Edges -> List String
 depictions mediaClass resource =
     List.filterMap (Media.imageUrl mediaClass << .media) <|
         edgesWithPredicate Predicate.HasDepiction resource
@@ -196,9 +196,9 @@ depictions mediaClass resource =
 -- DECODE
 
 
-{-| Decode a `Resource` that has edges.
+{-| Decode a `ResourceWith` that has edges.
 -}
-fromJsonWithEdges : Decode.Decoder (Resource WithEdges)
+fromJsonWithEdges : Decode.Decoder (ResourceWith Edges)
 fromJsonWithEdges =
     let
         resourceWithEdges a b c d e f g h i j k l =
@@ -231,9 +231,9 @@ fromJsonWithEdges =
         |> Pipeline.optional "edges" decodeEdges []
 
 
-{-| Decode a `Resource` that does not have edges.
+{-| Decode a `ResourceWith` that does not have edges.
 -}
-fromJsonWithoutEdges : Decode.Decoder (Resource {})
+fromJsonWithoutEdges : Decode.Decoder (ResourceWith {})
 fromJsonWithoutEdges =
     let
         resourceWithoutEdges a b c d e f g h i j k =

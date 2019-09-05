@@ -61,7 +61,7 @@ Here are some examples of how you might get Ginger resources.
 
 import Ginger.Category as Category exposing (Category)
 import Ginger.Id exposing (ResourceId)
-import Ginger.Resource as Resource exposing (Resource, WithEdges)
+import Ginger.Resource as Resource exposing (Edges, ResourceWith)
 import Ginger.Resource.Extra as Extra exposing (Location)
 import Http
 import Json.Decode as Decode
@@ -102,7 +102,7 @@ absolute path queryParams =
         Request.resourceById toMsg id
 
 -}
-resourceById : (Result Http.Error (Resource WithEdges) -> msg) -> ResourceId -> Cmd msg
+resourceById : (Result Http.Error (ResourceWith Edges) -> msg) -> ResourceId -> Cmd msg
 resourceById msg id =
     Http.get
         { url = absolute [ Ginger.Id.toString id ] []
@@ -117,7 +117,7 @@ resourceById msg id =
         Request.resourceByPath toMsg "/news"
 
 -}
-resourceByPath : (Result Http.Error (Resource WithEdges) -> msg) -> String -> Cmd msg
+resourceByPath : (Result Http.Error (ResourceWith Edges) -> msg) -> String -> Cmd msg
 resourceByPath msg path =
     Http.get
         { url = absolute [ "path", Url.percentEncode path ] []
@@ -132,7 +132,7 @@ resourceByPath msg path =
         Request.resourceByName toMsg "home"
 
 -}
-resourceByName : (Result Http.Error (Resource WithEdges) -> msg) -> String -> Cmd msg
+resourceByName : (Result Http.Error (ResourceWith Edges) -> msg) -> String -> Cmd msg
 resourceByName msg id =
     Http.get
         { url = absolute [ id ] []
@@ -148,7 +148,7 @@ resourceByName msg id =
 
 -}
 resourceQuery :
-    (Result Http.Error (Results (Resource WithEdges)) -> msg)
+    (Result Http.Error (Results (ResourceWith Edges)) -> msg)
     -> List QueryParam
     -> Cmd msg
 resourceQuery msg queryParams =
