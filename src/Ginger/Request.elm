@@ -186,6 +186,10 @@ type QueryParam
     | Facet String
     | Filter String Operator String
     | HasCategory Category
+    | HasObjectId ResourceId
+    | HasObjectName String
+    | HasSubjectId ResourceId
+    | HasSubjectName String
     | IsUnfinished
     | IsUpcoming
     | Limit Int
@@ -231,6 +235,18 @@ toUrlParam queryParam =
     case queryParam of
         HasCategory cat ->
             Url.Builder.string "cat" (Category.toString cat)
+
+        HasObjectId id ->
+            Url.Builder.int "hasobject" (Ginger.Id.toInt id)
+
+        HasObjectName name ->
+            Url.Builder.string "hasobject" ("'" ++ name ++ "'")
+
+        HasSubjectId id ->
+            Url.Builder.int "hassubject" (Ginger.Id.toInt id)
+
+        HasSubjectName name ->
+            Url.Builder.string "hassubject" ("'" ++ name ++ "'")
 
         PromoteCategory cat ->
             Url.Builder.string "cat_promote" (Category.toString cat)
