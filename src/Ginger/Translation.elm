@@ -87,13 +87,13 @@ languageModifier : Language -> (String -> Translations -> Translations)
 languageModifier language =
     case language of
         EN ->
-            \l t -> { t | en = l }
+            \value translations -> { translations | en = value }
 
         NL ->
-            \l t -> { t | nl = l }
+            \value translations -> { translations | nl = value }
 
         ZH ->
-            \l t -> { t | zh = l }
+            \value translations -> { translations | zh = value }
 
 
 
@@ -130,10 +130,11 @@ withDefault def language (Translation translation) =
 {-| Construct a Translation from a list of Language and String value pairs
 -}
 fromList : List ( Language, String ) -> Translation
-fromList =
-    List.foldl (\( language, s ) acc -> languageModifier language s acc)
-        { en = "", nl = "", zh = "" }
-        >> Translation
+fromList xs =
+    Translation <|
+        List.foldl (\( language, s ) acc -> languageModifier language s acc)
+            { en = "", nl = "", zh = "" }
+            xs
 
 
 {-| Convert a Language to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) String
