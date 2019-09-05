@@ -39,12 +39,12 @@ module Ginger.Translation exposing
 
 -}
 
-import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Lazy as Lazy
 import Html.Parser
 import Html.Parser.Util
 import Json.Decode as Decode
+import Json.Decode.Pipeline as Pipeline
 
 
 
@@ -53,14 +53,47 @@ import Json.Decode as Decode
 
 {-| -}
 type Translation
-    = Translation (Dict String String)
+    = Translation Translations
+
+
+type alias Translations =
+    { en : String
+    , nl : String
+    , zh : String
+    }
 
 
 {-| -}
 type Language
-    = NL
-    | EN
+    = EN
+    | NL
     | ZH
+
+
+languageAccessor : Language -> (Translations -> String)
+languageAccessor language =
+    case language of
+        EN ->
+            .en
+
+        NL ->
+            .nl
+
+        ZH ->
+            .zh
+
+
+languageModifier : Language -> (String -> Translations -> Translations)
+languageModifier language =
+    case language of
+        EN ->
+            \value translations -> { translations | en = value }
+
+        NL ->
+            \value translations -> { translations | nl = value }
+
+        ZH ->
+            \value translations -> { translations | zh = value }
 
 
 
@@ -74,8 +107,7 @@ _Defaults to an empty String._
 -}
 toString : Language -> Translation -> String
 toString language (Translation translation) =
-    Maybe.withDefault "" <|
-        Dict.get (toIso639 language) translation
+    languageAccessor language translation
 
 
 {-| Get the translated String value.
@@ -87,16 +119,22 @@ _Attempt fallback if translated value is missing, defaults to an empty String._
 -}
 withDefault : Language -> Language -> Translation -> String
 withDefault def language (Translation translation) =
-    Dict.get (toIso639 language) translation
-        |> Maybe.withDefault
-            (Maybe.withDefault "" (Dict.get (toIso639 def) translation))
+    case languageAccessor language translation of
+        "" ->
+            languageAccessor def translation
+
+        lang ->
+            lang
 
 
 {-| Construct a Translation from a list of Language and String value pairs
 -}
 fromList : List ( Language, String ) -> Translation
-fromList =
-    Translation << Dict.fromList << List.map (Tuple.mapFirst toIso639)
+fromList languageValuePairs =
+    Translation <|
+        List.foldl (\( language, value ) acc -> languageModifier language value acc)
+            { en = "", nl = "", zh = "" }
+            languageValuePairs
 
 
 {-| Convert a Language to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) String
@@ -158,12 +196,12 @@ text_ s =
 
 {-| Translate and render as Html markup
 -}
-html : Language -> Translation -> Html msg
+html : Language -> Translation -> List (Html msg)
 html language translation =
-    Lazy.lazy html_ (toString language translation)
+    html_ (toString language translation)
 
 
-html_ : String -> Html msg
+html_ : String -> List (Html msg)
 html_ s =
     let
         parsedString =
@@ -172,12 +210,10 @@ html_ s =
     in
     case parsedString of
         Err _ ->
-            -- TODO: Remove wrapping div in the next major release
-            div [] [ Html.text "Html could not be parsed" ]
+            [ Html.text "Html could not be parsed" ]
 
         Ok ok ->
-            -- TODO: Remove wrapping div in the next major release
-            div [] ok
+            ok
 
 
 
@@ -188,4 +224,8 @@ html_ s =
 fromJson : Decode.Decoder Translation
 fromJson =
     Decode.map Translation <|
-        Decode.dict Decode.string
+        (Decode.succeed Translations
+            |> Pipeline.optional "en" Decode.string ""
+            |> Pipeline.optional "nl" Decode.string ""
+            |> Pipeline.optional "zh" Decode.string ""
+        )
