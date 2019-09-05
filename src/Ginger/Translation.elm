@@ -130,11 +130,11 @@ withDefault def language (Translation translation) =
 {-| Construct a Translation from a list of Language and String value pairs
 -}
 fromList : List ( Language, String ) -> Translation
-fromList xs =
+fromList languageValuePairs =
     Translation <|
-        List.foldl (\( language, s ) acc -> languageModifier language s acc)
+        List.foldl (\( language, value ) acc -> languageModifier language value acc)
             { en = "", nl = "", zh = "" }
-            xs
+            languageValuePairs
 
 
 {-| Convert a Language to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) String
