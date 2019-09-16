@@ -43,6 +43,7 @@ import Html exposing (..)
 import Html.Lazy as Lazy
 import Html.Parser
 import Html.Parser.Util
+import Internal.Html
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
 
@@ -165,55 +166,14 @@ Html elements will be filtered out and the text will be joined.
 -}
 text : Language -> Translation -> Html msg
 text language translation =
-    text_ (toString language translation)
-
-
-text_ : String -> Html msg
-text_ s =
-    let
-        textNodes n acc =
-            case n of
-                Html.Parser.Text t ->
-                    t ++ acc
-
-                Html.Parser.Element _ _ n_ ->
-                    List.foldr textNodes acc n_
-
-                _ ->
-                    acc
-
-        parsedString =
-            Result.map (List.foldr textNodes "") <|
-                Html.Parser.run s
-    in
-    case parsedString of
-        Err _ ->
-            Html.text s
-
-        Ok t ->
-            Html.text t
+    Html.text (Internal.Html.stripHtml (toString language translation))
 
 
 {-| Translate and render as Html markup
 -}
 html : Language -> Translation -> List (Html msg)
 html language translation =
-    html_ (toString language translation)
-
-
-html_ : String -> List (Html msg)
-html_ s =
-    let
-        parsedString =
-            Result.map Html.Parser.Util.toVirtualDom <|
-                Html.Parser.run s
-    in
-    case parsedString of
-        Err _ ->
-            [ Html.text "Html could not be parsed" ]
-
-        Ok ok ->
-            ok
+    Internal.Html.toHtml (toString language translation)
 
 
 
