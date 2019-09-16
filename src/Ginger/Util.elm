@@ -179,10 +179,6 @@ stripHtml =
 -}
 truncate : Int -> String -> String
 truncate length s =
-    let
-        letters =
-            String.split ""
-    in
     if String.length s > length then
         String.left length s ++ "..."
 
