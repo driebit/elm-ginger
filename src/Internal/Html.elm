@@ -32,7 +32,7 @@ toHtml s =
         stripHtml "<p>Hola!</p>"
 
 
-    >>> "Hola!"
+    --> "Hola!"
 
 This unescapes html unicode characters as well
 
