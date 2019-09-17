@@ -1,5 +1,8 @@
 # Changelog
 
+# v2.1.0
+* Add `Ginger.Util` containing Html parsing and conditional view rendering functions
+
 # v2.0.0
 * Translation.html now returns a `List (Html msg)` instead of `Html msg`
 * Rename `Resource` -> `ResourceWith`

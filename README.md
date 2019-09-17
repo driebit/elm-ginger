@@ -21,3 +21,5 @@ Create Elm websites backed by the [Ginger CMS](https://github.com/driebit/ginger
 **Ginger.Media**: Container for images attached to a resource.
 
 **Ginger.Request**: Get and search resources.
+
+**Ginger.Util**: Functions for parsing and rendering `Html`.
