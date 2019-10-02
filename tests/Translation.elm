@@ -17,6 +17,18 @@ suite =
             \_ ->
                 Expect.equal "Hello" <|
                     Translation.toString EN translation
+        , test "Returns a translated string and unescapes chars" <|
+            \_ ->
+                Expect.equal "\"Hello\"" <|
+                    Translation.toString EN translationEscaped
+        , test "Returns a translated string and removes html nodes" <|
+            \_ ->
+                Expect.equal "Hallo" <|
+                    Translation.toString NL htmlTranslation
+        , test "Returns the orginal translated string" <|
+            \_ ->
+                Expect.equal "<p>Hallo</p>" <|
+                    Translation.toStringEscaped NL htmlTranslation
         , test "Returns an fallback string" <|
             \_ ->
                 Expect.equal "Hallo" <|
@@ -52,6 +64,13 @@ translation =
     Translation.fromList
         [ ( NL, "Hallo" )
         , ( EN, "Hello" )
+        ]
+
+
+translationEscaped : Translation
+translationEscaped =
+    Translation.fromList
+        [ ( EN, "&quot;Hello&quot;" )
         ]
 
 
