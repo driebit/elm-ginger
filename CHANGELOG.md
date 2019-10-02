@@ -1,5 +1,8 @@
 # Changelog
 
+# v2.2.0
+*  Escape `Translation.toString` and add `toStringEscaped` to access the original String
+
 # v2.1.0
 * Add `Ginger.Util` containing Html parsing and conditional view rendering functions
 
