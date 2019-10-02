@@ -56,6 +56,14 @@ suite =
                     |> Query.fromHtml
                     |> Query.find [ tag "p" ]
                     |> Query.has [ text "Hallo" ]
+        , test "Is empty Translation" <|
+            \_ ->
+                Expect.true "Expected the String to be empty" <|
+                    Translation.isEmpty NL (Translation.fromList [])
+        , test "Is not empty Translation" <|
+            \_ ->
+                Expect.false "Expected the String to not be empty" <|
+                    Translation.isEmpty NL translation
         ]
 
 

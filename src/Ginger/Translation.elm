@@ -4,6 +4,7 @@ module Ginger.Translation exposing
     , toString
     , toStringEscaped
     , withDefault
+    , isEmpty
     , fromList
     , toIso639
     , text
@@ -25,6 +26,7 @@ module Ginger.Translation exposing
 @docs toString
 @docs toStringEscaped
 @docs withDefault
+@docs isEmpty
 @docs fromList
 @docs toIso639
 
