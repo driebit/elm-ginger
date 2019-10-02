@@ -1,7 +1,7 @@
 # Changelog
 
 # v2.2.0
-* Escape `Translation.toString`,
+* Unescape `Translation.toString`,
 * Add `toStringEscaped` to access the original String
 * Add `isEmpty` to check if a translation is an empty String
 
