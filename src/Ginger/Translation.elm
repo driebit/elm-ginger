@@ -2,7 +2,9 @@ module Ginger.Translation exposing
     ( Translation
     , Language(..)
     , toString
+    , toStringEscaped
     , withDefault
+    , isEmpty
     , fromList
     , toIso639
     , text
@@ -22,7 +24,9 @@ module Ginger.Translation exposing
 # Conversion
 
 @docs toString
+@docs toStringEscaped
 @docs withDefault
+@docs isEmpty
 @docs fromList
 @docs toIso639
 
@@ -103,11 +107,21 @@ languageModifier language =
 
 {-| Get the translated String value.
 
-_Defaults to an empty String._
+_Unescapes character entity references, strips Html nodes and defaults to an empty String._
 
 -}
 toString : Language -> Translation -> String
 toString language (Translation translation) =
+    Internal.Html.stripHtml (languageAccessor language translation)
+
+
+{-| Get the _original_ translated String value as returned by the REST api.
+
+_Defaults to an empty String._
+
+-}
+toStringEscaped : Language -> Translation -> String
+toStringEscaped language (Translation translation) =
     languageAccessor language translation
 
 
@@ -126,6 +140,13 @@ withDefault def language (Translation translation) =
 
         lang ->
             lang
+
+
+{-| Checks if translated String is empty.
+-}
+isEmpty : Language -> Translation -> Bool
+isEmpty language (Translation translation) =
+    String.isEmpty (languageAccessor language translation)
 
 
 {-| Construct a Translation from a list of Language and String value pairs
@@ -166,14 +187,14 @@ Html elements will be filtered out and the text will be joined.
 -}
 text : Language -> Translation -> Html msg
 text language translation =
-    Html.text (Internal.Html.stripHtml (toString language translation))
+    Html.text (toString language translation)
 
 
 {-| Translate and render as Html markup
 -}
 html : Language -> Translation -> List (Html msg)
 html language translation =
-    Internal.Html.toHtml (toString language translation)
+    Internal.Html.toHtml (toStringEscaped language translation)
 
 
 

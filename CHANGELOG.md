@@ -1,5 +1,10 @@
 # Changelog
 
+# v2.2.0
+* Unescape `Translation.toString`,
+* Add `toStringEscaped` to access the original String
+* Add `isEmpty` to check if a translation is an empty String
+
 # v2.1.0
 * Add `Ginger.Util` containing Html parsing and conditional view rendering functions
 
