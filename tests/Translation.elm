@@ -33,6 +33,10 @@ suite =
             \_ ->
                 Expect.equal "Hallo" <|
                     Translation.withDefault NL ZH missingTranslations
+        , test "Returns an unescaped fallback string" <|
+            \_ ->
+                Expect.equal "\"Hello\"" <|
+                    Translation.withDefault EN ZH translationEscaped
         , test "Returns an empty string" <|
             \_ ->
                 Expect.equal "" <|

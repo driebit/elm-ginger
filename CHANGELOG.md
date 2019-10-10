@@ -1,5 +1,8 @@
 # Changelog
 
+# v2.2.1
+* Unescape `Translation.withDefault`,
+
 # v2.2.0
 * Unescape `Translation.toString`,
 * Add `toStringEscaped` to access the original String

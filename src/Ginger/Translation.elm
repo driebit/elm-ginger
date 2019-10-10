@@ -133,10 +133,10 @@ _Attempt fallback if translated value is missing, defaults to an empty String._
 
 -}
 withDefault : Language -> Language -> Translation -> String
-withDefault def language (Translation translation) =
-    case languageAccessor language translation of
+withDefault def language translation =
+    case toString language translation of
         "" ->
-            languageAccessor def translation
+            toString def translation
 
         lang ->
             lang
