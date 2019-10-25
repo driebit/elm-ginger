@@ -12,6 +12,7 @@
         "Ginger.Predicate",
         "Ginger.Translation",
         "Ginger.Media",
+        "Ginger.Menu",
         "Ginger.Request",
         "Ginger.Util"
     ],
