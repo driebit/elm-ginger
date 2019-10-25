@@ -1,5 +1,9 @@
 # Changelog
 
+# v2.3.0
+* Add `Ginger.Menu`
+* Add `Translation.empty`
+
 # v2.2.1
 * Unescape `Translation.withDefault`,
 
