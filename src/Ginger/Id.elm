@@ -4,6 +4,7 @@ module Ginger.Id exposing
     , toString
     , fromUrl
     , fromJson
+    , toJson
     )
 
 {-| The Ginger resource id. We 'tag' the resource id with type `Int`
@@ -27,14 +28,16 @@ come up so far, but file an issue if it does._
 @docs toString
 
 
-# Decode
+# Decode and Encode
 
 @docs fromUrl
 @docs fromJson
+@docs toJson
 
 -}
 
 import Json.Decode as Decode
+import Json.Encode as Encode
 import Tagged exposing (Tagged)
 import Url.Parser as Url
 
@@ -70,3 +73,9 @@ fromUrl =
 fromJson : Decode.Decoder ResourceId
 fromJson =
     Decode.map Tagged.tag Decode.int
+
+
+{-| -}
+toJson : ResourceId -> Encode.Value
+toJson =
+    Encode.int << Tagged.untag
