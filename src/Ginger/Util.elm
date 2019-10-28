@@ -90,7 +90,7 @@ viewMaybe maybeA html1 =
 
 {-| Convert a String to Html
 
-_This unescapes html unicode characters as well_
+_This unescapes character entity references as well_
 
 -}
 toHtml : String -> List (Html msg)
@@ -106,13 +106,20 @@ toHtml =
 
     --> "Hola!"
 
-_This unescapes html unicode characters as well.
+_This unescapes character entity references as well.
 If parsing fails the original String is returned_
 
 -}
 stripHtml : String -> String
 stripHtml =
     Internal.Html.stripHtml
+
+
+{-| Unescape character entity references
+-}
+unescape : String -> List (Html msg)
+unescape =
+    Internal.Html.toHtml
 
 
 {-| Truncate a String and append `...` if the String is longer than provided length
