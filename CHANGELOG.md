@@ -3,6 +3,7 @@
 # v3.0.0
 * Rename edgesWithPredicate -> objectsOfPredicate
 * Use minimal constraint on objectsOfPredicate (`{ a | edges : List Edge }` from `ResourceWith Edges`)
+* Depricate `viewEither` and `viewMaybeWithDefault`, use an `if` or `case` expression instead.
 
 # v2.3.0
 * Add Id.toJson
