@@ -1,5 +1,9 @@
 # Changelog
 
+# v3.0.0
+* Rename edgesWithPredicate -> objectsOfPredicate
+* Use minimal constraint on objectsOfPredicate (`{ a | edges : List Edge }` from `ResourceWith Edges`)
+
 # v2.3.0
 * Add Id.toJson
 

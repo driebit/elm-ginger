@@ -7,7 +7,7 @@ module Ginger.Resource exposing
     , category
     , depiction
     , depictions
-    , edgesWithPredicate
+    , objectsOfPredicate
     , fromJsonWithEdges
     , fromJsonWithoutEdges
     )
@@ -17,6 +17,7 @@ module Ginger.Resource exposing
 
 # Definitions
 
+@docs Resource
 @docs ResourceWith
 
 @docs Edges
@@ -30,7 +31,7 @@ module Ginger.Resource exposing
 @docs category
 @docs depiction
 @docs depictions
-@docs edgesWithPredicate
+@docs objectsOfPredicate
 
 
 # Decode
@@ -144,14 +145,14 @@ type BlockType
 -- QUERY
 
 
-{-| Return all edges with a given predicate.
+{-| Return all resources with a given predicate.
 
 The returned resources won't have any edges themselves, indicated by the `{}`
 in `ResourceWith {}`.
 
 -}
-edgesWithPredicate : Predicate -> ResourceWith Edges -> List (ResourceWith {})
-edgesWithPredicate predicate resource =
+objectsOfPredicate : Predicate -> { a | edges : List Edge } -> List (ResourceWith {})
+objectsOfPredicate predicate resource =
     List.map .resource <|
         List.filter ((==) predicate << .predicate) resource.edges
 
@@ -189,7 +190,7 @@ Returns a list of image urls if there is a depiction _and_ the mediaclass exists
 depictions : Media.MediaClass -> ResourceWith Edges -> List String
 depictions mediaClass resource =
     List.filterMap (Media.imageUrl mediaClass << .media) <|
-        edgesWithPredicate Predicate.HasDepiction resource
+        objectsOfPredicate Predicate.HasDepiction resource
 
 
 
