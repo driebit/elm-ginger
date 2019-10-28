@@ -1,5 +1,8 @@
 # Changelog
 
+# v2.3.0
+* Add Id.toJson
+
 # v2.2.1
 * Unescape `Translation.withDefault`,
 
