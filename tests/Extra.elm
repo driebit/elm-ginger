@@ -13,7 +13,7 @@ import Test.Html.Selector exposing (tag, text)
 
 suite : Test
 suite =
-    describe "The Ginger.Util module"
+    describe "The Ginger.Extra module"
         [ test "Renders a text as html" <|
             \_ ->
                 Html.article [] (Ginger.Util.toHtml "Hallo")
@@ -75,26 +75,6 @@ suite =
                         (\_ -> Html.text "I should not be rendered!")
                         |> Query.fromHtml
                         |> Query.hasNot [ text "I should not be rendered!" ]
-            , test "viewEither renders the first html option if boolean is True" <|
-                \() ->
-                    Ginger.Util.viewEither True
-                        (\_ -> Html.text "I am the first option!")
-                        (\_ -> Html.text "I am the second option!")
-                        |> Query.fromHtml
-                        |> Expect.all
-                            [ Query.has [ text "I am the first option!" ]
-                            , Query.hasNot [ text "I am the second option!" ]
-                            ]
-            , test "viewEither renders the second html option if boolean is False" <|
-                \() ->
-                    Ginger.Util.viewEither False
-                        (\_ -> Html.text "I am the first option!")
-                        (\_ -> Html.text "I am the second option!")
-                        |> Query.fromHtml
-                        |> Expect.all
-                            [ Query.hasNot [ text "I am the first option!" ]
-                            , Query.has [ text "I am the second option!" ]
-                            ]
             ]
         , describe "Optional views"
             [ test "viewMaybe renders nothing if there's nothing in the Maybe" <|
@@ -109,20 +89,6 @@ suite =
                         (\x -> Html.text (x ++ " should be rendered!"))
                         |> Query.fromHtml
                         |> Query.has [ text "Something should be rendered!" ]
-            , test "viewMaybeWithDefault renders something if there's something in the Maybe" <|
-                \() ->
-                    Ginger.Util.viewMaybeWithDefault (Just "Something")
-                        (\_ -> Html.text "I am the default text.")
-                        (\x -> Html.text (x ++ " should be rendered!"))
-                        |> Query.fromHtml
-                        |> Query.has [ text "Something should be rendered!" ]
-            , test "viewMaybeWithDefault renders the default html if there's nothing in the Maybe" <|
-                \() ->
-                    Ginger.Util.viewMaybeWithDefault Nothing
-                        (\_ -> Html.text "I am the default text.")
-                        (\x -> Html.text (x ++ " should not be rendered!"))
-                        |> Query.fromHtml
-                        |> Query.has [ text "I am the default text." ]
             ]
         , describe "String manipulation"
             [ test "truncates the string to provided length" <|

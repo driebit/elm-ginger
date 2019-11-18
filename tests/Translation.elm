@@ -13,11 +13,7 @@ import Test.Html.Selector exposing (tag, text)
 suite : Test
 suite =
     describe "The Ginger Translation module"
-        [ test "Returns an empty string" <|
-            \_ ->
-                Expect.equal "" <|
-                    Translation.toString EN Translation.empty
-        , test "Returns a translated string" <|
+        [ test "Returns a translated string" <|
             \_ ->
                 Expect.equal "Hello" <|
                     Translation.toString EN translation

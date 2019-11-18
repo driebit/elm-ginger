@@ -13,12 +13,12 @@ import Html.Parser.Util
 
 This unescapes character entity references as well
 
-_Defaults to empty List if parsing fails_
+_Will show an error if parsing fails_
 
 -}
 toHtml : String -> List (Html msg)
 toHtml s =
-    Result.withDefault [] <|
+    Result.withDefault [ text "Html could not be parsed" ] <|
         Result.map Html.Parser.Util.toVirtualDom <|
             Html.Parser.run s
 
