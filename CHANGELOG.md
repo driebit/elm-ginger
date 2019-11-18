@@ -1,13 +1,13 @@
 # Changelog
 
 # v3.0.0
+* Add `unescape`
+* Add `Ginger.Menu`
+* Add `Translation.empty`
+* Add `Id.toJson`
 * Rename edgesWithPredicate -> objectsOfPredicate
 * Use minimal constraint on objectsOfPredicate (`{ a | edges : List Edge }` from `ResourceWith Edges`)
 * Depricate `viewEither` and `viewMaybeWithDefault`, use an `if` or `case` expression instead
-* Add `unescape`
-
-# v2.3.0
-* Add Id.toJson
 
 # v2.2.1
 * Unescape `Translation.withDefault`

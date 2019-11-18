@@ -1,12 +1,13 @@
 module Ginger.Translation exposing
     ( Translation
     , Language(..)
+    , empty
+    , fromList
     , toString
     , toStringEscaped
     , withDefault
-    , isEmpty
-    , fromList
     , toIso639
+    , isEmpty
     , text
     , html
     , fromJson
@@ -21,14 +22,19 @@ module Ginger.Translation exposing
 @docs Language
 
 
-# Conversion
+# Construct
+
+@docs empty
+@docs fromList
+
+
+# Convert
 
 @docs toString
 @docs toStringEscaped
 @docs withDefault
-@docs isEmpty
-@docs fromList
 @docs toIso639
+@docs isEmpty
 
 
 # Html
@@ -101,6 +107,23 @@ languageModifier language =
             \value translations -> { translations | zh = value }
 
 
+{-| A Translation containing empty Strings
+-}
+empty : Translation
+empty =
+    Translation { en = "", nl = "", zh = "" }
+
+
+{-| Construct a Translation from a list of Language and String value pairs
+-}
+fromList : List ( Language, String ) -> Translation
+fromList languageValuePairs =
+    Translation <|
+        List.foldl (\( language, value ) acc -> languageModifier language value acc)
+            { en = "", nl = "", zh = "" }
+            languageValuePairs
+
+
 
 -- CONVERSIONS
 
@@ -147,16 +170,6 @@ withDefault def language translation =
 isEmpty : Language -> Translation -> Bool
 isEmpty language (Translation translation) =
     String.isEmpty (languageAccessor language translation)
-
-
-{-| Construct a Translation from a list of Language and String value pairs
--}
-fromList : List ( Language, String ) -> Translation
-fromList languageValuePairs =
-    Translation <|
-        List.foldl (\( language, value ) acc -> languageModifier language value acc)
-            { en = "", nl = "", zh = "" }
-            languageValuePairs
 
 
 {-| Convert a Language to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) String
