@@ -20,7 +20,7 @@ Create Elm websites backed by the [Ginger CMS](https://github.com/driebit/ginger
 
 **Ginger.Media**: Container for images attached to a resource.
 
-**Ginger.Menu**: Use Ginger main and footer menus
+**Ginger.Menu**: Use or decode Ginger main and footer menus
 
 **Ginger.Request**: Get and search resources.
 
