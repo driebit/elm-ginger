@@ -11,7 +11,7 @@
 * Add `Request.HasContentGroup`
 * Add `Request.SearchType`
 * Rename edgesWithPredicate -> objectsOfPredicate
-* Use minimal constraint on objectsOfPredicate (`{ a | edges : List Edge }` from `ResourceWith Edges`)
+* Use minimal constraint on objectsOfPredicate (`{ a | edges : List Edge }` instead of `ResourceWith Edges`)
 * Depricate `viewEither` and `viewMaybeWithDefault`, use an `if` or `case` expression instead
 
 # v2.2.1
