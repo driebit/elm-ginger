@@ -5,6 +5,9 @@ module Ginger.Menu exposing
     , empty
     , fromValue
     , fromJson
+    , decodeMenuItems
+    , decodeMenuItem
+    , decodeFooter
     )
 
 {-|
@@ -26,6 +29,9 @@ module Ginger.Menu exposing
 
 @docs fromValue
 @docs fromJson
+@docs decodeMenuItems
+@docs decodeMenuItem
+@docs decodeFooter
 
 -}
 
@@ -109,17 +115,42 @@ fromJson =
         |> Pipeline.required "footer_menu" decodeFooter
 
 
-decodeFooter : Decoder Footer
-decodeFooter =
-    Decode.succeed Footer
-        |> Pipeline.optional "subtitle" Translation.fromJson Translation.empty
-        |> Pipeline.optional "summary" Translation.fromJson Translation.empty
-        |> Pipeline.required "items" (Decode.list decodeMenuItem)
+{-| Build a custom menu `Decoder` re-using the decoders used in this module
+
+    type alias Menu =
+        { main : List Item
+        , mainExtra : List Item
+        , footer : List Item
+        , footerExtra : List Item
+        }
+
+    customFromJson : Decoder Menu
+    customFromJson =
+        Decode.succeed Menu
+            |> Pipeline.required "main_menu" decodeMenuItems
+            |> Pipeline.required "main_menu_extra" decodeMenuItems
+            |> Pipeline.required "footer_menu" decodeMenuItems
+            |> Pipeline.required "footer_menu_extra" decodeMenuItems
+
+-}
+decodeMenuItems : Decoder (List Item)
+decodeMenuItems =
+    Decode.list decodeMenuItem
 
 
+{-| -}
 decodeMenuItem : Decoder Item
 decodeMenuItem =
     Decode.succeed Item
         |> Pipeline.required "id" Id.fromJson
         |> Pipeline.required "title" Translation.fromJson
         |> Pipeline.optional "page_url" Decode.string ""
+
+
+{-| -}
+decodeFooter : Decoder Footer
+decodeFooter =
+    Decode.succeed Footer
+        |> Pipeline.optional "subtitle" Translation.fromJson Translation.empty
+        |> Pipeline.optional "summary" Translation.fromJson Translation.empty
+        |> Pipeline.required "items" (Decode.list decodeMenuItem)
