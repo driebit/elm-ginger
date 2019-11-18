@@ -10,6 +10,10 @@ module Ginger.Translation exposing
     , isEmpty
     , text
     , html
+    , textNL
+    , htmlNL
+    , textEN
+    , htmlEN
     , fromJson
     )
 
@@ -37,10 +41,18 @@ module Ginger.Translation exposing
 @docs isEmpty
 
 
-# Html
+# Render as Html
 
 @docs text
 @docs html
+
+
+# Render in language
+
+@docs textNL
+@docs htmlNL
+@docs textEN
+@docs htmlEN
 
 
 # Decode
@@ -208,6 +220,34 @@ text language translation =
 html : Language -> Translation -> List (Html msg)
 html language translation =
     Internal.Html.toHtml (toStringEscaped language translation)
+
+
+{-| Translate to Dutch and render as Html text
+-}
+textNL : Translation -> Html msg
+textNL =
+    text NL
+
+
+{-| Translate to Dutch and render as Html markup
+-}
+htmlNL : Translation -> List (Html msg)
+htmlNL =
+    html NL
+
+
+{-| Translate to English and render as Html text
+-}
+textEN : Translation -> Html msg
+textEN =
+    text EN
+
+
+{-| Translate to English and render as Html markup
+-}
+htmlEN : Translation -> List (Html msg)
+htmlEN =
+    html EN
 
 
 

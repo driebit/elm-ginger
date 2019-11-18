@@ -115,13 +115,6 @@ stripHtml =
     Internal.Html.stripHtml
 
 
-{-| Unescape character entity references
--}
-unescape : String -> List (Html msg)
-unescape =
-    Internal.Html.toHtml
-
-
 {-| Truncate a String and append `...` if the String is longer than provided length
 
 

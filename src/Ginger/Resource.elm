@@ -17,7 +17,6 @@ module Ginger.Resource exposing
 
 # Definitions
 
-@docs Resource
 @docs ResourceWith
 
 @docs Edges

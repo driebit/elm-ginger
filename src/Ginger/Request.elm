@@ -142,9 +142,9 @@ resourceByName msg id =
 
 {-|
 
-    request : Http.Request Http.Error (List Resource)
-    request =
-        Request.resourceQuery [ Text "amsterdam" ]
+    request : (Http.Request Http.Error Resource -> msg) -> Cmd msg
+    request toMsg =
+        Request.resourceQuery toMsg [ Text "amsterdam" ]
 
 -}
 resourceQuery :
@@ -182,7 +182,8 @@ locationQuery msg queryParams =
 {-| Some of these params only work if `mod_elasticsearch` is enabled
 -}
 type QueryParam
-    = ExcludeCategory Category
+    = HasContentGroup String
+    | ExcludeCategory Category
     | Facet String
     | Filter String Operator String
     | HasCategory Category
@@ -197,6 +198,7 @@ type QueryParam
     | PromoteCategory Category
     | SortBy SortField Ordering
     | Text String
+    | SearchType String
     | Custom String String
 
 
@@ -233,6 +235,9 @@ queryParamsToBuilder =
 toUrlParam : QueryParam -> Url.Builder.QueryParameter
 toUrlParam queryParam =
     case queryParam of
+        HasContentGroup group ->
+            Url.Builder.string "content_group" group
+
         HasCategory cat ->
             Url.Builder.string "cat" (Category.toString cat)
 
@@ -269,6 +274,9 @@ toUrlParam queryParam =
 
         Text text ->
             Url.Builder.string "text" text
+
+        SearchType type_ ->
+            Url.Builder.string "type" type_
 
         SortBy PublicationDate Asc ->
             Url.Builder.string "sort" "rsc.publication_start"
