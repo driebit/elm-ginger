@@ -1,6 +1,8 @@
 # Changelog
 
 # v3.0.0
+* Add `Resource` alias for ResourceWith Edges
+* Add `Translation.DE`
 * Add `Ginger.Menu`
 * Add `Translation.empty`
 * Add `Translation.textNL`
