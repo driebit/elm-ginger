@@ -2,11 +2,12 @@ module Ginger.Resource exposing
     ( ResourceWith
     , Edges
     , Edge
+    , Resource
     , Block
     , BlockType(..)
-    , category
-    , depiction
-    , depictions
+    , getCategory
+    , getDepiction
+    , getDepictions
     , objectsOfPredicate
     , fromJsonWithEdges
     , fromJsonWithoutEdges
@@ -21,15 +22,16 @@ module Ginger.Resource exposing
 
 @docs Edges
 @docs Edge
+@docs Resource
 @docs Block
 @docs BlockType
 
 
 # Access data
 
-@docs category
-@docs depiction
-@docs depictions
+@docs getCategory
+@docs getDepiction
+@docs getDepictions
 @docs objectsOfPredicate
 
 
@@ -162,7 +164,7 @@ objectsOfPredicate predicate resource =
         List.filter ((==) predicate << .predicate) resource.edges
 
 
-{-| The category of a `ResourceWith`.
+{-| Get the category of a `ResourceWith`.
 
 Every resource has _one_ category, but can be part of a hierarchy of other
 categories. For example `news` is part of `text > article > news`. This function
@@ -172,8 +174,8 @@ _Note: there hasn't been the need to expose any of the parent categories so far,
 if there is please file an issue._
 
 -}
-category : ResourceWith a -> Category
-category =
+getCategory : ResourceWith a -> Category
+getCategory =
     List.NonEmpty.head << .category
 
 
@@ -182,9 +184,9 @@ category =
 Returns the image url if there is a depiction _and_ the mediaclass exists.
 
 -}
-depiction : Media.MediaClass -> ResourceWith Edges -> Maybe String
-depiction mediaClass =
-    List.head << depictions mediaClass
+getDepiction : Media.MediaClass -> ResourceWith Edges -> Maybe String
+getDepiction mediaClass =
+    List.head << getDepictions mediaClass
 
 
 {-| The image urls of the `ResourceWith` depictions
@@ -192,8 +194,8 @@ depiction mediaClass =
 Returns a list of image urls if there is a depiction _and_ the mediaclass exists.
 
 -}
-depictions : Media.MediaClass -> ResourceWith Edges -> List String
-depictions mediaClass resource =
+getDepictions : Media.MediaClass -> ResourceWith Edges -> List String
+getDepictions mediaClass resource =
     List.filterMap (Media.imageUrl mediaClass << .media) <|
         objectsOfPredicate Predicate.HasDepiction resource
 
