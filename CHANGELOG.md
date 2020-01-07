@@ -4,9 +4,9 @@
 * Rename `category` -> `getCategory`
 * Rename `depiction` -> `getDepiction`
 * Rename `depictions` -> `getDepictions`
-* Rename `category` -> `getCategory`
 * Rename `resourceQuery` -> `search`
 * Rename `locationQuery` -> `searchLocation`
+* Rename `Results` -> `SearchResult`
 * Add common REST API request
   * `deleteResource`
   * `postEdge`

@@ -9,7 +9,7 @@ module Ginger.Request exposing
     , uploadFileAndPostEdge
     , search
     , searchLocation
-    , Results
+    , SearchResult
     , QueryParam(..)
     , Ordering(..)
     , SortField(..)
@@ -49,7 +49,7 @@ module Ginger.Request exposing
 @docs search
 @docs searchLocation
 
-@docs Results
+@docs SearchResult
 
 @docs QueryParam
 @docs Ordering
@@ -81,7 +81,7 @@ import Url.Builder
 
 
 {-| -}
-type alias Results a =
+type alias SearchResult a =
     { results : List a
     , facets : Decode.Value
     , total : Int
@@ -102,9 +102,6 @@ absolute path queryParams =
 
 
 {-| Request a resource by `ResourceId`
-
-    Request.resourceById GotResource id
-
 -}
 resourceById : (Result Http.Error (ResourceWith Edges) -> msg) -> ResourceId -> Cmd msg
 resourceById msg id =
@@ -115,9 +112,6 @@ resourceById msg id =
 
 
 {-| Request a resource by its `page_path`
-
-    Request.resourceByPath GotResource "/news"
-
 -}
 resourceByPath : (Result Http.Error (ResourceWith Edges) -> msg) -> String -> Cmd msg
 resourceByPath msg path =
@@ -127,10 +121,7 @@ resourceByPath msg path =
         }
 
 
-{-| Request a resource by its uniquename
-
-    Request.resourceByName GotResource "home"
-
+{-| Request a resource by its unique name
 -}
 resourceByName : (Result Http.Error (ResourceWith Edges) -> msg) -> String -> Cmd msg
 resourceByName msg id =
@@ -150,7 +141,7 @@ resourceByName msg id =
 
 -}
 search :
-    (Result Http.Error (Results (ResourceWith Edges)) -> msg)
+    (Result Http.Error (SearchResult (ResourceWith Edges)) -> msg)
     -> List QueryParam
     -> Cmd msg
 search msg queryParams =
@@ -170,7 +161,7 @@ search msg queryParams =
         [ Request.HasCategory Person ]
 
 -}
-searchLocation : (Result Http.Error (Results Location) -> msg) -> List QueryParam -> Cmd msg
+searchLocation : (Result Http.Error (SearchResult Location) -> msg) -> List QueryParam -> Cmd msg
 searchLocation msg queryParams =
     Http.get
         { url =
@@ -187,9 +178,6 @@ searchLocation msg queryParams =
 
 
 {-| Delete a resource by `ResourceId`
-
-    Request.deleteResource GotDeleteResource id
-
 -}
 deleteResource :
     (Result Http.Error () -> msg)
@@ -441,9 +429,9 @@ operatorToString operator =
 -- DECODE
 
 
-fromJson : Decode.Decoder (List a) -> Decode.Decoder (Results a)
+fromJson : Decode.Decoder (List a) -> Decode.Decoder (SearchResult a)
 fromJson decoder =
-    Decode.succeed Results
+    Decode.succeed SearchResult
         |> Pipeline.required "result" decoder
         |> Pipeline.required "facets" Decode.value
         |> Pipeline.required "total" Decode.int
