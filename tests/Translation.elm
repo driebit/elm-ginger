@@ -68,6 +68,26 @@ suite =
             \_ ->
                 Expect.false "Expected the String to not be empty" <|
                     Translation.isEmpty NL translation
+        , test "Renders a Dutch text as html" <|
+            \_ ->
+                Html.article [] [ Translation.textNL translation ]
+                    |> Query.fromHtml
+                    |> Query.has [ text "Hallo" ]
+        , test "Renders a English text as html" <|
+            \_ ->
+                Html.article [] [ Translation.textEN translation ]
+                    |> Query.fromHtml
+                    |> Query.has [ text "Hello" ]
+        , test "Renders a Dutch markup as html" <|
+            \_ ->
+                Html.article [] (Translation.htmlNL htmlTranslation)
+                    |> Query.fromHtml
+                    |> Query.has [ text "Hallo" ]
+        , test "Renders a English markup as html" <|
+            \_ ->
+                Html.article [] (Translation.htmlEN htmlTranslation)
+                    |> Query.fromHtml
+                    |> Query.has [ text "Hello" ]
         ]
 
 
@@ -96,6 +116,7 @@ htmlTranslation : Translation
 htmlTranslation =
     Translation.fromList
         [ ( NL, "<p>Hallo</p>" )
+        , ( EN, "<p>Hello</p>" )
         ]
 
 

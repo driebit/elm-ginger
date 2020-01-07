@@ -3,7 +3,7 @@
     "name": "driebit/elm-ginger",
     "summary": "Ginger CMS integration",
     "license": "BSD-3-Clause",
-    "version": "2.3.0",
+    "version": "3.0.0",
     "exposed-modules": [
         "Ginger.Resource",
         "Ginger.Resource.Extra",
@@ -12,6 +12,7 @@
         "Ginger.Predicate",
         "Ginger.Translation",
         "Ginger.Media",
+        "Ginger.Menu",
         "Ginger.Request",
         "Ginger.Util"
     ],
@@ -19,6 +20,7 @@
     "dependencies": {
         "NoRedInk/elm-json-decode-pipeline": "1.0.0 <= v < 2.0.0",
         "elm/core": "1.0.2 <= v < 2.0.0",
+        "elm/file": "1.0.5 <= v < 2.0.0",
         "elm/html": "1.0.0 <= v < 2.0.0",
         "elm/http": "2.0.0 <= v < 3.0.0",
         "elm/json": "1.1.3 <= v < 2.0.0",

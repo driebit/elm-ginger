@@ -62,7 +62,7 @@ authorName resource =
     in
     Maybe.andThen fromProperties <|
         List.head <|
-            Resource.edgesWithPredicate Predicate.HasAuthor resource
+            Resource.objectsOfPredicate Predicate.HasAuthor resource
 
 
 {-| -}

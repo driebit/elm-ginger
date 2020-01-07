@@ -1,14 +1,19 @@
 module Ginger.Translation exposing
     ( Translation
     , Language(..)
+    , empty
+    , fromList
     , toString
     , toStringEscaped
     , withDefault
-    , isEmpty
-    , fromList
     , toIso639
+    , isEmpty
     , text
     , html
+    , textNL
+    , htmlNL
+    , textEN
+    , htmlEN
     , fromJson
     )
 
@@ -21,20 +26,33 @@ module Ginger.Translation exposing
 @docs Language
 
 
-# Conversion
+# Construct
+
+@docs empty
+@docs fromList
+
+
+# Convert
 
 @docs toString
 @docs toStringEscaped
 @docs withDefault
-@docs isEmpty
-@docs fromList
 @docs toIso639
+@docs isEmpty
 
 
-# Html
+# Render as Html
 
 @docs text
 @docs html
+
+
+# Render in language
+
+@docs textNL
+@docs htmlNL
+@docs textEN
+@docs htmlEN
 
 
 # Decode
@@ -64,6 +82,7 @@ type Translation
 type alias Translations =
     { en : String
     , nl : String
+    , de : String
     , zh : String
     }
 
@@ -72,6 +91,7 @@ type alias Translations =
 type Language
     = EN
     | NL
+    | DE
     | ZH
 
 
@@ -83,6 +103,9 @@ languageAccessor language =
 
         NL ->
             .nl
+
+        DE ->
+            .de
 
         ZH ->
             .zh
@@ -97,8 +120,28 @@ languageModifier language =
         NL ->
             \value translations -> { translations | nl = value }
 
+        DE ->
+            \value translations -> { translations | de = value }
+
         ZH ->
             \value translations -> { translations | zh = value }
+
+
+{-| A Translation containing empty Strings
+-}
+empty : Translation
+empty =
+    Translation { en = "", nl = "", de = "", zh = "" }
+
+
+{-| Construct a Translation from a list of Language and String value pairs
+-}
+fromList : List ( Language, String ) -> Translation
+fromList languageValuePairs =
+    Translation <|
+        List.foldl (\( language, value ) acc -> languageModifier language value acc)
+            { en = "", nl = "", de = "", zh = "" }
+            languageValuePairs
 
 
 
@@ -149,16 +192,6 @@ isEmpty language (Translation translation) =
     String.isEmpty (languageAccessor language translation)
 
 
-{-| Construct a Translation from a list of Language and String value pairs
--}
-fromList : List ( Language, String ) -> Translation
-fromList languageValuePairs =
-    Translation <|
-        List.foldl (\( language, value ) acc -> languageModifier language value acc)
-            { en = "", nl = "", zh = "" }
-            languageValuePairs
-
-
 {-| Convert a Language to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) String
 -}
 toIso639 : Language -> String
@@ -169,6 +202,9 @@ toIso639 language =
 
         NL ->
             "nl"
+
+        DE ->
+            "de"
 
         ZH ->
             "zh"
@@ -197,6 +233,34 @@ html language translation =
     Internal.Html.toHtml (toStringEscaped language translation)
 
 
+{-| Translate to Dutch and render as Html text
+-}
+textNL : Translation -> Html msg
+textNL =
+    text NL
+
+
+{-| Translate to Dutch and render as Html markup
+-}
+htmlNL : Translation -> List (Html msg)
+htmlNL =
+    html NL
+
+
+{-| Translate to English and render as Html text
+-}
+textEN : Translation -> Html msg
+textEN =
+    text EN
+
+
+{-| Translate to English and render as Html markup
+-}
+htmlEN : Translation -> List (Html msg)
+htmlEN =
+    html EN
+
+
 
 -- DECODE
 
@@ -208,5 +272,6 @@ fromJson =
         (Decode.succeed Translations
             |> Pipeline.optional "en" Decode.string ""
             |> Pipeline.optional "nl" Decode.string ""
+            |> Pipeline.optional "de" Decode.string ""
             |> Pipeline.optional "zh" Decode.string ""
         )

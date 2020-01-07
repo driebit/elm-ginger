@@ -2,9 +2,14 @@ module Ginger.Request exposing
     ( resourceById
     , resourceByPath
     , resourceByName
-    , resourceQuery
-    , locationQuery
-    , Results
+    , deleteResource
+    , postEdge
+    , deleteEdge
+    , uploadFile
+    , uploadFileAndPostEdge
+    , search
+    , searchLocation
+    , SearchResult
     , QueryParam(..)
     , Ordering(..)
     , SortField(..)
@@ -15,40 +20,36 @@ module Ginger.Request exposing
 {-|
 
 
-# Requests
-
-Here are some examples of how you might get Ginger resources.
-
-    import Ginger.Request as Request
-        exposing
-            ( Ordering(..)
-            , QueryParam(..)
-            , SortField(..)
-            )
-
-    query : Cmd Msg
-    query =
-        Request.resourceQuery GotSearchResults
-            [ Text "amsterdam" ]
-
-    events : Cmd Msg
-    events =
-        Request.resourceQuery GotEvents
-            [ Upcoming
-            , HasCategory Event
-            , SortBy StartDate Asc
-            ]
+# Get
 
 @docs resourceById
 @docs resourceByPath
 @docs resourceByName
-@docs resourceQuery
-@docs locationQuery
+
+
+## Delete
+
+@docs deleteResource
+
+
+## Edge
+
+@docs postEdge
+@docs deleteEdge
+
+
+## File
+
+@docs uploadFile
+@docs uploadFileAndPostEdge
 
 
 # Search
 
-@docs Results
+@docs search
+@docs searchLocation
+
+@docs SearchResult
 
 @docs QueryParam
 @docs Ordering
@@ -59,13 +60,18 @@ Here are some examples of how you might get Ginger resources.
 
 -}
 
+import File exposing (File)
 import Ginger.Category as Category exposing (Category)
-import Ginger.Id exposing (ResourceId)
+import Ginger.Id as Id exposing (ResourceId)
+import Ginger.Predicate as Predicate exposing (Predicate)
 import Ginger.Resource as Resource exposing (Edges, ResourceWith)
 import Ginger.Resource.Extra as Extra exposing (Location)
 import Http
+import Internal.Request as Request
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
+import Json.Encode as Encode
+import Task exposing (Task)
 import Url
 import Url.Builder
 
@@ -75,7 +81,7 @@ import Url.Builder
 
 
 {-| -}
-type alias Results a =
+type alias SearchResult a =
     { results : List a
     , facets : Decode.Value
     , total : Int
@@ -95,27 +101,17 @@ absolute path queryParams =
 -- REQUESTS
 
 
-{-|
-
-    request : (Http.Request Http.Error Resource -> msg) -> Ginger.Id.ResourceId -> Cmd msg
-    request toMsg id =
-        Request.resourceById toMsg id
-
+{-| Request a resource by `ResourceId`
 -}
 resourceById : (Result Http.Error (ResourceWith Edges) -> msg) -> ResourceId -> Cmd msg
 resourceById msg id =
     Http.get
-        { url = absolute [ Ginger.Id.toString id ] []
+        { url = absolute [ Id.toString id ] []
         , expect = Http.expectJson msg Resource.fromJsonWithEdges
         }
 
 
-{-|
-
-    request : (Http.Request Http.Error Resource -> msg) -> Cmd msg
-    request toMsg =
-        Request.resourceByPath toMsg "/news"
-
+{-| Request a resource by its `page_path`
 -}
 resourceByPath : (Result Http.Error (ResourceWith Edges) -> msg) -> String -> Cmd msg
 resourceByPath msg path =
@@ -125,12 +121,7 @@ resourceByPath msg path =
         }
 
 
-{-|
-
-    request : (Http.Request Http.Error Resource -> msg) -> Cmd msg
-    request toMsg =
-        Request.resourceByName toMsg "home"
-
+{-| Request a resource by its unique name
 -}
 resourceByName : (Result Http.Error (ResourceWith Edges) -> msg) -> String -> Cmd msg
 resourceByName msg id =
@@ -142,16 +133,18 @@ resourceByName msg id =
 
 {-|
 
-    request : Http.Request Http.Error (List Resource)
-    request =
-        Request.resourceQuery [ Text "amsterdam" ]
+    Request.search GotEvents
+        [ Request.Upcoming
+        , Request.HasCategory Event
+        , Request.SortBy Request.StartDate Request.Asc
+        ]
 
 -}
-resourceQuery :
-    (Result Http.Error (Results (ResourceWith Edges)) -> msg)
+search :
+    (Result Http.Error (SearchResult (ResourceWith Edges)) -> msg)
     -> List QueryParam
     -> Cmd msg
-resourceQuery msg queryParams =
+search msg queryParams =
     Http.get
         { url =
             Url.Builder.absolute [ "data", "search" ] <|
@@ -162,9 +155,14 @@ resourceQuery msg queryParams =
         }
 
 
-{-| -}
-locationQuery : (Result Http.Error (Results Location) -> msg) -> List QueryParam -> Cmd msg
-locationQuery msg queryParams =
+{-|
+
+    Request.searchLocation GotLocations
+        [ Request.HasCategory Person ]
+
+-}
+searchLocation : (Result Http.Error (SearchResult Location) -> msg) -> List QueryParam -> Cmd msg
+searchLocation msg queryParams =
     Http.get
         { url =
             Url.Builder.absolute [ "data", "search", "coordinates" ] <|
@@ -176,13 +174,119 @@ locationQuery msg queryParams =
 
 
 
+-- DELETE
+
+
+{-| Delete a resource by `ResourceId`
+-}
+deleteResource :
+    (Result Http.Error () -> msg)
+    -> ResourceId
+    -> Cmd msg
+deleteResource toMsg id =
+    Request.delete
+        (Url.Builder.absolute [ "data", "resources", Id.toString id ] [])
+        (Http.expectWhatever toMsg)
+
+
+
+-- UPLOAD
+
+
+{-| -}
+uploadFile : File -> Task Http.Error ResourceId
+uploadFile file =
+    Request.postTask (Url.Builder.absolute [ "api", "base", "media_upload" ] [])
+        (Http.multipartBody [ Http.filePart "file" file ])
+        (Decode.field "rsc_id" Id.fromJson)
+
+
+{-| -}
+uploadFileAndPostEdge :
+    { from : ResourceId
+    , predicate : Predicate
+    , file : File
+    }
+    -> Task Http.Error (ResourceWith Edges)
+uploadFileAndPostEdge { from, file, predicate } =
+    let
+        get id =
+            Request.getTask
+                (Url.Builder.absolute [ "data", "resources", Id.toString id ] [])
+                Resource.fromJsonWithEdges
+
+        post fileId =
+            Task.map2 (\a _ -> a)
+                (get fileId)
+                (postEdge
+                    { from = from
+                    , predicate = predicate
+                    , to = fileId
+                    }
+                )
+    in
+    Task.andThen post (uploadFile file)
+
+
+
+-- EDGE
+
+
+{-| -}
+postEdge :
+    { from : ResourceId
+    , predicate : Predicate
+    , to : ResourceId
+    }
+    -> Task Http.Error ()
+postEdge edge =
+    let
+        url =
+            Url.Builder.absolute
+                [ "data"
+                , "resources"
+                , Id.toString edge.from
+                , "edges"
+                , Predicate.toString edge.predicate
+                ]
+                []
+
+        body =
+            Http.jsonBody <|
+                Encode.object [ ( "object", Id.toJson edge.to ) ]
+    in
+    Request.postTaskNoContent url body
+
+
+{-| -}
+deleteEdge :
+    { from : ResourceId
+    , predicate : Predicate
+    , to : ResourceId
+    }
+    -> Task Http.Error ()
+deleteEdge edge =
+    Request.deleteTaskNoContent <|
+        Url.Builder.absolute
+            [ "data"
+            , "resources"
+            , Id.toString edge.from
+            , "edges"
+            , Predicate.toString edge.predicate
+            , Id.toString edge.to
+            ]
+            []
+
+
+
 -- QUERYPARAMS
 
 
 {-| Some of these params only work if `mod_elasticsearch` is enabled
 -}
 type QueryParam
-    = ExcludeCategory Category
+    = HasContentGroup String
+    | ExcludeCategory Category
     | Facet String
     | Filter String Operator String
     | HasCategory Category
@@ -197,6 +301,7 @@ type QueryParam
     | PromoteCategory Category
     | SortBy SortField Ordering
     | Text String
+    | SearchType String
     | Custom String String
 
 
@@ -233,17 +338,20 @@ queryParamsToBuilder =
 toUrlParam : QueryParam -> Url.Builder.QueryParameter
 toUrlParam queryParam =
     case queryParam of
+        HasContentGroup group ->
+            Url.Builder.string "content_group" group
+
         HasCategory cat ->
             Url.Builder.string "cat" (Category.toString cat)
 
         HasObjectId id ->
-            Url.Builder.int "hasobject" (Ginger.Id.toInt id)
+            Url.Builder.int "hasobject" (Id.toInt id)
 
         HasObjectName name ->
             Url.Builder.string "hasobject" ("'" ++ name ++ "'")
 
         HasSubjectId id ->
-            Url.Builder.int "hassubject" (Ginger.Id.toInt id)
+            Url.Builder.int "hassubject" (Id.toInt id)
 
         HasSubjectName name ->
             Url.Builder.string "hassubject" ("'" ++ name ++ "'")
@@ -269,6 +377,9 @@ toUrlParam queryParam =
 
         Text text ->
             Url.Builder.string "text" text
+
+        SearchType type_ ->
+            Url.Builder.string "type" type_
 
         SortBy PublicationDate Asc ->
             Url.Builder.string "sort" "rsc.publication_start"
@@ -318,9 +429,9 @@ operatorToString operator =
 -- DECODE
 
 
-fromJson : Decode.Decoder (List a) -> Decode.Decoder (Results a)
+fromJson : Decode.Decoder (List a) -> Decode.Decoder (SearchResult a)
 fromJson decoder =
-    Decode.succeed Results
+    Decode.succeed SearchResult
         |> Pipeline.required "result" decoder
         |> Pipeline.required "facets" Decode.value
         |> Pipeline.required "total" Decode.int
