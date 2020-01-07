@@ -1,6 +1,20 @@
 # Changelog
 
 # v3.0.0
+* Rename `category` -> `getCategory`
+* Rename `depiction` -> `getDepiction`
+* Rename `depictions` -> `getDepictions`
+* Rename `category` -> `getCategory`
+* Rename `resourceQuery` -> `search`
+* Rename `locationQuery` -> `searchLocation`
+* Add common REST API request
+  * `deleteResource`
+  * `postEdge`
+  * `deleteEdge`
+  * `uploadFile`
+  * `uploadFileAndPostEdge`
+* Add `Request.HasContentGroup`
+* Add `Request.SearchType`
 * Add `Resource` alias for ResourceWith Edges
 * Add `Translation.DE`
 * Add `Ginger.Menu`
@@ -10,8 +24,6 @@
 * Add `Translation.textEN`
 * Add `Translation.htmlEN`
 * Add `Id.toJson`
-* Add `Request.HasContentGroup`
-* Add `Request.SearchType`
 * Rename edgesWithPredicate -> objectsOfPredicate
 * Use minimal constraint on objectsOfPredicate (`{ a | edges : List Edge }` instead of `ResourceWith Edges`)
 * Depricate `viewEither` and `viewMaybeWithDefault`, use an `if` or `case` expression instead
