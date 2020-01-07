@@ -122,6 +122,12 @@ type alias Edge =
     }
 
 
+{-| Alias for `ResourceWith Edges`
+-}
+type alias Resource =
+    ResourceWith Edges
+
+
 {-| -}
 type alias Block =
     { body : Translation

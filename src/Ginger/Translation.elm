@@ -82,6 +82,7 @@ type Translation
 type alias Translations =
     { en : String
     , nl : String
+    , de : String
     , zh : String
     }
 
@@ -90,6 +91,7 @@ type alias Translations =
 type Language
     = EN
     | NL
+    | DE
     | ZH
 
 
@@ -101,6 +103,9 @@ languageAccessor language =
 
         NL ->
             .nl
+
+        DE ->
+            .de
 
         ZH ->
             .zh
@@ -115,6 +120,9 @@ languageModifier language =
         NL ->
             \value translations -> { translations | nl = value }
 
+        DE ->
+            \value translations -> { translations | de = value }
+
         ZH ->
             \value translations -> { translations | zh = value }
 
@@ -123,7 +131,7 @@ languageModifier language =
 -}
 empty : Translation
 empty =
-    Translation { en = "", nl = "", zh = "" }
+    Translation { en = "", nl = "", de = "", zh = "" }
 
 
 {-| Construct a Translation from a list of Language and String value pairs
@@ -132,7 +140,7 @@ fromList : List ( Language, String ) -> Translation
 fromList languageValuePairs =
     Translation <|
         List.foldl (\( language, value ) acc -> languageModifier language value acc)
-            { en = "", nl = "", zh = "" }
+            { en = "", nl = "", de = "", zh = "" }
             languageValuePairs
 
 
@@ -194,6 +202,9 @@ toIso639 language =
 
         NL ->
             "nl"
+
+        DE ->
+            "de"
 
         ZH ->
             "zh"
@@ -261,5 +272,6 @@ fromJson =
         (Decode.succeed Translations
             |> Pipeline.optional "en" Decode.string ""
             |> Pipeline.optional "nl" Decode.string ""
+            |> Pipeline.optional "de" Decode.string ""
             |> Pipeline.optional "zh" Decode.string ""
         )
