@@ -6,6 +6,7 @@ module Ginger.Resource exposing
     , Block
     , BlockType(..)
     , getCategory
+    , getCategories
     , getDepiction
     , getDepictions
     , objectsOfPredicate
@@ -30,6 +31,7 @@ module Ginger.Resource exposing
 # Access data
 
 @docs getCategory
+@docs getCategories
 @docs getDepiction
 @docs getDepictions
 @docs objectsOfPredicate
@@ -170,13 +172,18 @@ Every resource has _one_ category, but can be part of a hierarchy of other
 categories. For example `news` is part of `text > article > news`. This function
 will always return the `Category` stored with the `ResourceWith`.
 
-_Note: there hasn't been the need to expose any of the parent categories so far,
-if there is please file an issue._
-
 -}
 getCategory : ResourceWith a -> Category
 getCategory =
     List.NonEmpty.head << .category
+
+
+{-| Get the category including its parents from a `ResourceWith` sorted
+from big to small.
+-}
+getCategories : ResourceWith a -> List Category
+getCategories =
+    List.reverse << List.NonEmpty.toList << .category
 
 
 {-| The image url of the `ResourceWith` depiction.
