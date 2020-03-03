@@ -1,5 +1,8 @@
 # Changelog
 
+# v3.1.0
+* Add `getCategories`, get a category including its parents
+
 # v3.0.0
 * Rename `category` -> `getCategory`
 * Rename `depiction` -> `getDepiction`
