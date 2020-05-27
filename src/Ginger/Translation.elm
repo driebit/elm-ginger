@@ -61,6 +61,7 @@ module Ginger.Translation exposing
 
 -}
 
+import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Lazy as Lazy
 import Html.Parser
@@ -80,58 +81,79 @@ type Translation
 
 
 type alias Translations =
-    { en : String
-    , nl : String
-    , de : String
-    , zh : String
-    }
+    Dict String String
+
+
+type Text
+    = Plain
+    | Markup
 
 
 {-| -}
 type Language
-    = EN
-    | NL
-    | DE
-    | ZH
+    = Language String
 
 
-languageAccessor : Language -> (Translations -> String)
-languageAccessor language =
-    case language of
-        EN ->
-            .en
-
-        NL ->
-            .nl
-
-        DE ->
-            .de
-
-        ZH ->
-            .zh
+en : Language
+en =
+    Language "en"
 
 
-languageModifier : Language -> (String -> Translations -> Translations)
-languageModifier language =
-    case language of
-        EN ->
-            \value translations -> { translations | en = value }
-
-        NL ->
-            \value translations -> { translations | nl = value }
-
-        DE ->
-            \value translations -> { translations | de = value }
-
-        ZH ->
-            \value translations -> { translations | zh = value }
+de : Language
+de =
+    Language "de"
 
 
-{-| A Translation containing empty Strings
+nl : Language
+nl =
+    Language "nl"
+
+
+zh : Language
+zh =
+    Language "zh"
+
+
+ar : Language
+ar =
+    Language "ar"
+
+
+es : Language
+es =
+    Language "es"
+
+
+id : Language
+id =
+    Language "id"
+
+
+fr : Language
+fr =
+    Language "fr"
+
+
+pl : Language
+pl =
+    Language "pl"
+
+
+sr : Language
+sr =
+    Language "sr"
+
+
+tr : Language
+tr =
+    Language "tr"
+
+
+{-| An empty 'Translation'
 -}
 empty : Translation
 empty =
-    Translation { en = "", nl = "", de = "", zh = "" }
+    Translation Dict.empty
 
 
 {-| Construct a Translation from a list of Language and String value pairs
@@ -139,9 +161,8 @@ empty =
 fromList : List ( Language, String ) -> Translation
 fromList languageValuePairs =
     Translation <|
-        List.foldl (\( language, value ) acc -> languageModifier language value acc)
-            { en = "", nl = "", de = "", zh = "" }
-            languageValuePairs
+        Dict.fromList <|
+            List.map (\( Language language, value ) -> ( language, value )) languageValuePairs
 
 
 
@@ -154,8 +175,8 @@ _Unescapes character entity references, strips Html nodes and defaults to an emp
 
 -}
 toString : Language -> Translation -> String
-toString language (Translation translation) =
-    Internal.Html.stripHtml (languageAccessor language translation)
+toString language translation =
+    Internal.Html.stripHtml (get language translation)
 
 
 {-| Get the _original_ translated String value as returned by the REST api.
@@ -164,8 +185,8 @@ _Defaults to an empty String._
 
 -}
 toStringEscaped : Language -> Translation -> String
-toStringEscaped language (Translation translation) =
-    languageAccessor language translation
+toStringEscaped language translation =
+    get language translation
 
 
 {-| Get the translated String value.
@@ -188,26 +209,15 @@ withDefault def language translation =
 {-| Checks if translated String is empty.
 -}
 isEmpty : Language -> Translation -> Bool
-isEmpty language (Translation translation) =
-    String.isEmpty (languageAccessor language translation)
+isEmpty language translation =
+    String.isEmpty (get language translation)
 
 
 {-| Convert a Language to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) String
 -}
 toIso639 : Language -> String
-toIso639 language =
-    case language of
-        EN ->
-            "en"
-
-        NL ->
-            "nl"
-
-        DE ->
-            "de"
-
-        ZH ->
-            "zh"
+toIso639 (Language language) =
+    language
 
 
 
@@ -237,28 +247,28 @@ html language translation =
 -}
 textNL : Translation -> Html msg
 textNL =
-    text NL
+    text nl
 
 
 {-| Translate to Dutch and render as Html markup
 -}
 htmlNL : Translation -> List (Html msg)
 htmlNL =
-    html NL
+    html nl
 
 
 {-| Translate to English and render as Html text
 -}
 textEN : Translation -> Html msg
 textEN =
-    text EN
+    text en
 
 
 {-| Translate to English and render as Html markup
 -}
 htmlEN : Translation -> List (Html msg)
 htmlEN =
-    html EN
+    html en
 
 
 
@@ -268,10 +278,20 @@ htmlEN =
 {-| -}
 fromJson : Decode.Decoder Translation
 fromJson =
+    let
+        filter k v =
+            String.length k == 2 && not (String.isEmpty v)
+    in
     Decode.map Translation <|
-        (Decode.succeed Translations
-            |> Pipeline.optional "en" Decode.string ""
-            |> Pipeline.optional "nl" Decode.string ""
-            |> Pipeline.optional "de" Decode.string ""
-            |> Pipeline.optional "zh" Decode.string ""
-        )
+        Decode.map (Dict.filter filter) <|
+            Decode.dict Decode.string
+
+
+
+-- HELPERS
+
+
+get : Language -> Translation -> String
+get (Language language) (Translation translation) =
+    Maybe.withDefault "" <|
+        Dict.get language translation
