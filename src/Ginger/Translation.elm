@@ -91,62 +91,19 @@ type Text
 
 {-| -}
 type Language
-    = Language String
-
-
-en : Language
-en =
-    Language "en"
-
-
-de : Language
-de =
-    Language "de"
-
-
-nl : Language
-nl =
-    Language "nl"
-
-
-zh : Language
-zh =
-    Language "zh"
-
-
-ar : Language
-ar =
-    Language "ar"
-
-
-es : Language
-es =
-    Language "es"
-
-
-id : Language
-id =
-    Language "id"
-
-
-fr : Language
-fr =
-    Language "fr"
-
-
-pl : Language
-pl =
-    Language "pl"
-
-
-sr : Language
-sr =
-    Language "sr"
-
-
-tr : Language
-tr =
-    Language "tr"
+    = AR
+    | DE
+    | EN
+    | ES
+    | ET
+    | FR
+    | ID
+    | NL
+    | PL
+    | RU
+    | SR
+    | TR
+    | ZH
 
 
 {-| An empty 'Translation'
@@ -162,7 +119,7 @@ fromList : List ( Language, String ) -> Translation
 fromList languageValuePairs =
     Translation <|
         Dict.fromList <|
-            List.map (\( Language language, value ) -> ( language, value )) languageValuePairs
+            List.map (\( language, value ) -> ( toIso639 language, value )) languageValuePairs
 
 
 
@@ -216,8 +173,46 @@ isEmpty language translation =
 {-| Convert a Language to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) String
 -}
 toIso639 : Language -> String
-toIso639 (Language language) =
-    language
+toIso639 language =
+    case language of
+        AR ->
+            "ar"
+
+        DE ->
+            "de"
+
+        EN ->
+            "en"
+
+        ES ->
+            "es"
+
+        ET ->
+            "et"
+
+        FR ->
+            "fr"
+
+        ID ->
+            "id"
+
+        NL ->
+            "nl"
+
+        PL ->
+            "pl"
+
+        RU ->
+            "ru"
+
+        SR ->
+            "sr"
+
+        TR ->
+            "tr"
+
+        ZH ->
+            "zh"
 
 
 
@@ -247,28 +242,28 @@ html language translation =
 -}
 textNL : Translation -> Html msg
 textNL =
-    text nl
+    text NL
 
 
 {-| Translate to Dutch and render as Html markup
 -}
 htmlNL : Translation -> List (Html msg)
 htmlNL =
-    html nl
+    html NL
 
 
 {-| Translate to English and render as Html text
 -}
 textEN : Translation -> Html msg
 textEN =
-    text en
+    text EN
 
 
 {-| Translate to English and render as Html markup
 -}
 htmlEN : Translation -> List (Html msg)
 htmlEN =
-    html en
+    html EN
 
 
 
@@ -292,6 +287,6 @@ fromJson =
 
 
 get : Language -> Translation -> String
-get (Language language) (Translation translation) =
+get language (Translation translation) =
     Maybe.withDefault "" <|
-        Dict.get language translation
+        Dict.get (toIso639 language) translation
