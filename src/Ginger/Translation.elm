@@ -62,13 +62,12 @@ module Ginger.Translation exposing
 -}
 
 import Dict exposing (Dict)
-import Html exposing (..)
-import Html.Lazy as Lazy
+import Html exposing (Html)
 import Html.Parser
 import Html.Parser.Util
 import Internal.Html
 import Json.Decode as Decode
-import Json.Decode.Pipeline as Pipeline
+import Parser
 
 
 
@@ -77,16 +76,7 @@ import Json.Decode.Pipeline as Pipeline
 
 {-| -}
 type Translation
-    = Translation Translations
-
-
-type alias Translations =
-    Dict String String
-
-
-type Text
-    = Plain
-    | Markup
+    = Translation (Dict String ( String, Result (List Parser.DeadEnd) (List Html.Parser.Node) ))
 
 
 {-| -}
@@ -104,73 +94,10 @@ type Language
     | SR
     | TR
     | ZH
+    | Other String
 
 
-{-| An empty 'Translation'
--}
-empty : Translation
-empty =
-    Translation Dict.empty
-
-
-{-| Construct a Translation from a list of Language and String value pairs
--}
-fromList : List ( Language, String ) -> Translation
-fromList languageValuePairs =
-    Translation <|
-        Dict.fromList <|
-            List.map (\( language, value ) -> ( toIso639 language, value )) languageValuePairs
-
-
-
--- CONVERSIONS
-
-
-{-| Get the translated String value.
-
-_Unescapes character entity references, strips Html nodes and defaults to an empty String._
-
--}
-toString : Language -> Translation -> String
-toString language translation =
-    Internal.Html.stripHtml (get language translation)
-
-
-{-| Get the _original_ translated String value as returned by the REST api.
-
-_Defaults to an empty String._
-
--}
-toStringEscaped : Language -> Translation -> String
-toStringEscaped language translation =
-    get language translation
-
-
-{-| Get the translated String value.
-
-The first argument is the fallback Language.
-
-_Attempt fallback if translated value is missing, defaults to an empty String._
-
--}
-withDefault : Language -> Language -> Translation -> String
-withDefault def language translation =
-    case toString language translation of
-        "" ->
-            toString def translation
-
-        lang ->
-            lang
-
-
-{-| Checks if translated String is empty.
--}
-isEmpty : Language -> Translation -> Bool
-isEmpty language translation =
-    String.isEmpty (get language translation)
-
-
-{-| Convert a Language to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) String
+{-| Convert a `Language` to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) `String`
 -}
 toIso639 : Language -> String
 toIso639 language =
@@ -214,6 +141,82 @@ toIso639 language =
         ZH ->
             "zh"
 
+        Other s ->
+            s
+
+
+{-| An empty 'Translation'
+-}
+empty : Translation
+empty =
+    Translation Dict.empty
+
+
+{-| Construct a `Translation` from a list of `Language` and `String` value pairs
+
+_Empty Strings will be ignored_
+
+-}
+fromList : List ( Language, String ) -> Translation
+fromList =
+    Translation << Dict.fromList << List.filterMap (fromPair << Tuple.mapFirst toIso639)
+
+
+
+-- CONVERSIONS
+
+
+{-| Get the translated `String` value.
+
+_Unescapes character entity references, strips Html nodes and defaults to an empty String._
+
+-}
+toString : Language -> Translation -> String
+toString language (Translation translation) =
+    case Dict.get (toIso639 language) translation of
+        Nothing ->
+            ""
+
+        Just ( s, Err _ ) ->
+            s
+
+        Just ( _, Ok nodes ) ->
+            Internal.Html.textNodes nodes
+
+
+{-| Get the _original_ translated `String` value as returned by the REST api.
+_Defaults to an empty String._
+-}
+toStringEscaped : Language -> Translation -> String
+toStringEscaped language (Translation translation) =
+    Dict.get (toIso639 language) translation
+        |> Maybe.map Tuple.first
+        |> Maybe.withDefault ""
+
+
+{-| Get the translated `String` value.
+
+The first argument is the fallback `Language`.
+
+_Attempt fallback if translated value is missing, defaults to an empty String._
+
+-}
+withDefault : Language -> Language -> Translation -> String
+withDefault def language translation =
+    case toString language translation of
+        "" ->
+            toString def translation
+
+        lang ->
+            lang
+
+
+{-| Checks if translated `String` is empty.
+-}
+isEmpty : Language -> Translation -> Bool
+isEmpty language (Translation translation) =
+    Dict.get (toIso639 language) translation == Nothing
+
 
 
 -- HTML
@@ -223,7 +226,7 @@ toIso639 language =
 
 We try to unescape the escaped characters but if that fails we'll render the `Translation` as is.
 
-Html elements will be filtered out and the text will be joined.
+Html elements will be filtered out and the text will be concatenated.
 
 -}
 text : Language -> Translation -> Html msg
@@ -234,8 +237,16 @@ text language translation =
 {-| Translate and render as Html markup
 -}
 html : Language -> Translation -> List (Html msg)
-html language translation =
-    Internal.Html.toHtml (toStringEscaped language translation)
+html language (Translation translation) =
+    case Dict.get (toIso639 language) translation of
+        Nothing ->
+            []
+
+        Just ( s, Err _ ) ->
+            []
+
+        Just ( _, Ok nodes ) ->
+            Html.Parser.Util.toVirtualDom nodes
 
 
 {-| Translate to Dutch and render as Html text
@@ -274,19 +285,30 @@ htmlEN =
 fromJson : Decode.Decoder Translation
 fromJson =
     let
-        filter k v =
-            String.length k == 2 && not (String.isEmpty v)
+        decode pair acc =
+            case fromPair pair of
+                Nothing ->
+                    acc
+
+                Just ( k, v ) ->
+                    Dict.insert k v acc
     in
-    Decode.map Translation <|
-        Decode.map (Dict.filter filter) <|
-            Decode.dict Decode.string
+    Decode.map (Translation << List.foldl decode Dict.empty) <|
+        Decode.keyValuePairs Decode.string
 
 
+fromPair : ( String, String ) -> Maybe ( String, ( String, Result (List Parser.DeadEnd) (List Html.Parser.Node) ) )
+fromPair ( k, v ) =
+    if String.isEmpty v then
+        Nothing
 
--- HELPERS
+    else
+        case Html.Parser.run v of
+            Ok [] ->
+                Nothing
 
+            Ok nodes ->
+                Just ( k, ( v, Ok nodes ) )
 
-get : Language -> Translation -> String
-get language (Translation translation) =
-    Maybe.withDefault "" <|
-        Dict.get (toIso639 language) translation
+            Err err ->
+                Just ( k, ( v, Err err ) )

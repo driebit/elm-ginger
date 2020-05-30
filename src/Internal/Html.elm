@@ -1,5 +1,6 @@
 module Internal.Html exposing
     ( stripHtml
+    , textNodes
     , toHtml
     , unescape
     )
@@ -37,21 +38,26 @@ This unescapes character entity references as well
 -}
 stripHtml : String -> String
 stripHtml s =
+    Result.withDefault s <|
+        Result.map textNodes <|
+            Html.Parser.run s
+
+
+textNodes : List Html.Parser.Node -> String
+textNodes nodes =
     let
-        textNodes n acc =
+        filter n acc =
             case n of
                 Html.Parser.Text t ->
                     t ++ acc
 
                 Html.Parser.Element _ _ n_ ->
-                    List.foldr textNodes acc n_
+                    List.foldr filter acc n_
 
                 _ ->
                     acc
     in
-    Result.withDefault s <|
-        Result.map (List.foldr textNodes "") <|
-            Html.Parser.run s
+    List.foldr filter "" nodes
 
 
 {-| Unescape character entity references
