@@ -193,9 +193,12 @@ _Defaults to an empty String._
 -}
 toStringEscaped : Language -> Translation -> String
 toStringEscaped language (Translation translation) =
-    Dict.get (toIso639 language) translation
-        |> Maybe.map Tuple.first
-        |> Maybe.withDefault ""
+    case Dict.get (toIso639 language) translation of
+        Nothing ->
+            ""
+
+        Just ( s, _ ) ->
+            s
 
 
 {-| Get the translated `String` value.
