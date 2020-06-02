@@ -76,7 +76,11 @@ import Parser
 
 {-| -}
 type Translation
-    = Translation (Dict String ( String, Result (List Parser.DeadEnd) (List Html.Parser.Node) ))
+    = Translation (Dict String ( OriginalString, Result (List Parser.DeadEnd) (List Html.Parser.Node) ))
+
+
+type alias OriginalString =
+    String
 
 
 {-| -}
@@ -94,7 +98,7 @@ type Language
     | SR
     | TR
     | ZH
-    | Other String
+    | Custom String
 
 
 {-| Convert a `Language` to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) `String`
@@ -141,7 +145,7 @@ toIso639 language =
         ZH ->
             "zh"
 
-        Other s ->
+        Custom s ->
             s
 
 
@@ -297,7 +301,7 @@ fromJson =
         Decode.keyValuePairs Decode.string
 
 
-fromPair : ( String, String ) -> Maybe ( String, ( String, Result (List Parser.DeadEnd) (List Html.Parser.Node) ) )
+fromPair : ( String, String ) -> Maybe ( String, ( OriginalString, Result (List Parser.DeadEnd) (List Html.Parser.Node) ) )
 fromPair ( k, v ) =
     if String.isEmpty v then
         Nothing
