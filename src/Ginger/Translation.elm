@@ -61,13 +61,13 @@ module Ginger.Translation exposing
 
 -}
 
-import Html exposing (..)
-import Html.Lazy as Lazy
+import Dict exposing (Dict)
+import Html exposing (Html)
 import Html.Parser
 import Html.Parser.Util
 import Internal.Html
 import Json.Decode as Decode
-import Json.Decode.Pipeline as Pipeline
+import Parser
 
 
 
@@ -76,101 +76,134 @@ import Json.Decode.Pipeline as Pipeline
 
 {-| -}
 type Translation
-    = Translation Translations
+    = Translation (Dict String ( OriginalString, Result (List Parser.DeadEnd) (List Html.Parser.Node) ))
 
 
-type alias Translations =
-    { en : String
-    , nl : String
-    , de : String
-    , zh : String
-    }
+type alias OriginalString =
+    String
 
 
 {-| -}
 type Language
-    = EN
-    | NL
+    = AR
     | DE
+    | EN
+    | ES
+    | ET
+    | FR
+    | ID
+    | NL
+    | PL
+    | RU
+    | SR
+    | TR
     | ZH
+    | Custom String
 
 
-languageAccessor : Language -> (Translations -> String)
-languageAccessor language =
+{-| Convert a `Language` to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) `String`
+-}
+toIso639 : Language -> String
+toIso639 language =
     case language of
-        EN ->
-            .en
-
-        NL ->
-            .nl
+        AR ->
+            "ar"
 
         DE ->
-            .de
+            "de"
 
-        ZH ->
-            .zh
-
-
-languageModifier : Language -> (String -> Translations -> Translations)
-languageModifier language =
-    case language of
         EN ->
-            \value translations -> { translations | en = value }
+            "en"
+
+        ES ->
+            "es"
+
+        ET ->
+            "et"
+
+        FR ->
+            "fr"
+
+        ID ->
+            "id"
 
         NL ->
-            \value translations -> { translations | nl = value }
+            "nl"
 
-        DE ->
-            \value translations -> { translations | de = value }
+        PL ->
+            "pl"
+
+        RU ->
+            "ru"
+
+        SR ->
+            "sr"
+
+        TR ->
+            "tr"
 
         ZH ->
-            \value translations -> { translations | zh = value }
+            "zh"
+
+        Custom s ->
+            s
 
 
-{-| A Translation containing empty Strings
+{-| An empty 'Translation'
 -}
 empty : Translation
 empty =
-    Translation { en = "", nl = "", de = "", zh = "" }
+    Translation Dict.empty
 
 
-{-| Construct a Translation from a list of Language and String value pairs
+{-| Construct a `Translation` from a list of `Language` and `String` value pairs
+
+_Empty Strings will be ignored_
+
 -}
 fromList : List ( Language, String ) -> Translation
-fromList languageValuePairs =
-    Translation <|
-        List.foldl (\( language, value ) acc -> languageModifier language value acc)
-            { en = "", nl = "", de = "", zh = "" }
-            languageValuePairs
+fromList =
+    Translation << Dict.fromList << List.filterMap (fromPair << Tuple.mapFirst toIso639)
 
 
 
 -- CONVERSIONS
 
 
-{-| Get the translated String value.
+{-| Get the translated `String` value.
 
 _Unescapes character entity references, strips Html nodes and defaults to an empty String._
 
 -}
 toString : Language -> Translation -> String
 toString language (Translation translation) =
-    Internal.Html.stripHtml (languageAccessor language translation)
+    case Dict.get (toIso639 language) translation of
+        Nothing ->
+            ""
+
+        Just ( s, Err _ ) ->
+            s
+
+        Just ( _, Ok nodes ) ->
+            Internal.Html.textNodes nodes
 
 
-{-| Get the _original_ translated String value as returned by the REST api.
-
+{-| Get the _original_ translated `String` value as returned by the REST api.
 _Defaults to an empty String._
-
 -}
 toStringEscaped : Language -> Translation -> String
 toStringEscaped language (Translation translation) =
-    languageAccessor language translation
+    case Dict.get (toIso639 language) translation of
+        Nothing ->
+            ""
+
+        Just ( s, _ ) ->
+            s
 
 
-{-| Get the translated String value.
+{-| Get the translated `String` value.
 
-The first argument is the fallback Language.
+The first argument is the fallback `Language`.
 
 _Attempt fallback if translated value is missing, defaults to an empty String._
 
@@ -185,29 +218,11 @@ withDefault def language translation =
             lang
 
 
-{-| Checks if translated String is empty.
+{-| Checks if translated `String` is empty.
 -}
 isEmpty : Language -> Translation -> Bool
 isEmpty language (Translation translation) =
-    String.isEmpty (languageAccessor language translation)
-
-
-{-| Convert a Language to an [Iso639](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) String
--}
-toIso639 : Language -> String
-toIso639 language =
-    case language of
-        EN ->
-            "en"
-
-        NL ->
-            "nl"
-
-        DE ->
-            "de"
-
-        ZH ->
-            "zh"
+    Dict.get (toIso639 language) translation == Nothing
 
 
 
@@ -218,7 +233,7 @@ toIso639 language =
 
 We try to unescape the escaped characters but if that fails we'll render the `Translation` as is.
 
-Html elements will be filtered out and the text will be joined.
+Html elements will be filtered out and the text will be concatenated.
 
 -}
 text : Language -> Translation -> Html msg
@@ -229,8 +244,16 @@ text language translation =
 {-| Translate and render as Html markup
 -}
 html : Language -> Translation -> List (Html msg)
-html language translation =
-    Internal.Html.toHtml (toStringEscaped language translation)
+html language (Translation translation) =
+    case Dict.get (toIso639 language) translation of
+        Nothing ->
+            []
+
+        Just ( s, Err _ ) ->
+            []
+
+        Just ( _, Ok nodes ) ->
+            Html.Parser.Util.toVirtualDom nodes
 
 
 {-| Translate to Dutch and render as Html text
@@ -268,10 +291,31 @@ htmlEN =
 {-| -}
 fromJson : Decode.Decoder Translation
 fromJson =
-    Decode.map Translation <|
-        (Decode.succeed Translations
-            |> Pipeline.optional "en" Decode.string ""
-            |> Pipeline.optional "nl" Decode.string ""
-            |> Pipeline.optional "de" Decode.string ""
-            |> Pipeline.optional "zh" Decode.string ""
-        )
+    let
+        decode pair acc =
+            case fromPair pair of
+                Nothing ->
+                    acc
+
+                Just ( k, v ) ->
+                    Dict.insert k v acc
+    in
+    Decode.map (Translation << List.foldl decode Dict.empty) <|
+        Decode.keyValuePairs Decode.string
+
+
+fromPair : ( String, String ) -> Maybe ( String, ( OriginalString, Result (List Parser.DeadEnd) (List Html.Parser.Node) ) )
+fromPair ( k, v ) =
+    if String.isEmpty v then
+        Nothing
+
+    else
+        case Html.Parser.run v of
+            Ok [] ->
+                Nothing
+
+            Ok nodes ->
+                Just ( k, ( v, Ok nodes ) )
+
+            Err err ->
+                Just ( k, ( v, Err err ) )
