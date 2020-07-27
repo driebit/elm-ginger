@@ -5,6 +5,7 @@ module Ginger.Translation exposing
     , fromList
     , toString
     , toStringEscaped
+    , toNodes
     , withDefault
     , toIso639
     , isEmpty
@@ -36,6 +37,7 @@ module Ginger.Translation exposing
 
 @docs toString
 @docs toStringEscaped
+@docs toNodes
 @docs withDefault
 @docs toIso639
 @docs isEmpty
@@ -76,11 +78,7 @@ import Parser
 
 {-| -}
 type Translation
-    = Translation (Dict String ( OriginalString, Result (List Parser.DeadEnd) (List Html.Parser.Node) ))
-
-
-type alias OriginalString =
-    String
+    = Translation (Dict String String)
 
 
 {-| -}
@@ -163,7 +161,7 @@ _Empty Strings will be ignored_
 -}
 fromList : List ( Language, String ) -> Translation
 fromList =
-    Translation << Dict.fromList << List.filterMap (fromPair << Tuple.mapFirst toIso639)
+    Translation << Dict.fromList << List.map (Tuple.mapFirst toIso639)
 
 
 
@@ -181,15 +179,14 @@ toString language (Translation translation) =
         Nothing ->
             ""
 
-        Just ( s, Err _ ) ->
-            s
-
-        Just ( _, Ok nodes ) ->
-            Internal.Html.textNodes nodes
+        Just s ->
+            Internal.Html.stripHtml s
 
 
 {-| Get the _original_ translated `String` value as returned by the REST api.
+
 _Defaults to an empty String._
+
 -}
 toStringEscaped : Language -> Translation -> String
 toStringEscaped language (Translation translation) =
@@ -197,7 +194,7 @@ toStringEscaped language (Translation translation) =
         Nothing ->
             ""
 
-        Just ( s, _ ) ->
+        Just s ->
             s
 
 
@@ -226,6 +223,22 @@ isEmpty language (Translation translation) =
 
 
 
+-- NODES
+
+
+{-| Get translated `String` as `hecrj/html-parser` `Node`s
+
+_Defaults to an empty `List` if parsing fails._
+
+-}
+toNodes : Language -> Translation -> List Html.Parser.Node
+toNodes language (Translation translation) =
+    Maybe.withDefault [] <|
+        Maybe.andThen (Result.toMaybe << Html.Parser.run) <|
+            Dict.get (toIso639 language) translation
+
+
+
 -- HTML
 
 
@@ -249,11 +262,8 @@ html language (Translation translation) =
         Nothing ->
             []
 
-        Just ( s, Err _ ) ->
-            []
-
-        Just ( _, Ok nodes ) ->
-            Html.Parser.Util.toVirtualDom nodes
+        Just s ->
+            Internal.Html.toHtml s
 
 
 {-| Translate to Dutch and render as Html text
@@ -291,31 +301,5 @@ htmlEN =
 {-| -}
 fromJson : Decode.Decoder Translation
 fromJson =
-    let
-        decode pair acc =
-            case fromPair pair of
-                Nothing ->
-                    acc
-
-                Just ( k, v ) ->
-                    Dict.insert k v acc
-    in
-    Decode.map (Translation << List.foldl decode Dict.empty) <|
-        Decode.keyValuePairs Decode.string
-
-
-fromPair : ( String, String ) -> Maybe ( String, ( OriginalString, Result (List Parser.DeadEnd) (List Html.Parser.Node) ) )
-fromPair ( k, v ) =
-    if String.isEmpty v then
-        Nothing
-
-    else
-        case Html.Parser.run v of
-            Ok [] ->
-                Nothing
-
-            Ok nodes ->
-                Just ( k, ( v, Ok nodes ) )
-
-            Err err ->
-                Just ( k, ( v, Err err ) )
+    Decode.map Translation <|
+        Decode.dict Decode.string
