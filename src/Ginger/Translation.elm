@@ -219,7 +219,11 @@ withDefault def language translation =
 -}
 isEmpty : Language -> Translation -> Bool
 isEmpty language (Translation translation) =
-    Dict.get (toIso639 language) translation == Nothing
+    let
+        val =
+            Dict.get (toIso639 language) translation
+    in
+    val == Nothing || val == Just ""
 
 
 
