@@ -64,6 +64,14 @@ suite =
             \_ ->
                 Expect.true "Expected the String to be empty" <|
                     Translation.isEmpty NL (Translation.fromList [])
+        , test "Is empty Translation with empty string" <|
+            \_ ->
+                Expect.true "Expected the String to be empty" <|
+                    Translation.isEmpty NL (Translation.fromList [ ( NL, "" ) ])
+        , test "Is non empty Translation" <|
+            \_ ->
+                Expect.false "Expected the String to be non empty" <|
+                    Translation.isEmpty NL (Translation.fromList [ ( NL, "fire" ) ])
         , test "Is not empty Translation" <|
             \_ ->
                 Expect.false "Expected the String to not be empty" <|

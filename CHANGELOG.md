@@ -1,5 +1,8 @@
 # Changelog
 
+# v4.1.1
+* Add extra check to `Translation.isEmpty`
+
 # v4.1.0
 * Revert "Parse all translations during JSON decoding", moving the cost of parsing to this step was a mistake because we
 don't use _all_ the parsed text _most_ of the time.
