@@ -3,7 +3,7 @@
     "name": "driebit/elm-ginger",
     "summary": "Ginger CMS integration",
     "license": "BSD-3-Clause",
-    "version": "4.1.0",
+    "version": "4.1.1",
     "exposed-modules": [
         "Ginger.Resource",
         "Ginger.Resource.Extra",
