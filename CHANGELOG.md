@@ -1,5 +1,14 @@
 # Changelog
 
+# v4.1.0
+* Revert "Parse all translations during JSON decoding", moving the cost of parsing to this step was a mistake because we
+don't use _all_ the parsed text _most_ of the time.
+* Add `toNodes` to return translated parsed html nodes
+
+# v4.0.0
+* Add more languages to `Translation`
+* Parse all translations during JSON decoding
+
 # v3.1.0
 * Add `getCategories`, get a category including its parents
 
