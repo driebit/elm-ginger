@@ -1,17 +1,11 @@
 module Ginger.Resource exposing
-    ( ResourceWith
-    , Edges
+    ( ResourceData
     , Edge
-    , Resource
-    , Block
-    , BlockType(..)
     , getCategory
     , getCategories
-    , getDepiction
-    , getDepictions
     , objectsOfPredicate
-    , fromJsonWithEdges
-    , fromJsonWithoutEdges
+    , categoryListFromJson
+    , CategoryList, ResourceDataConstructor, depictionsOfClass, edgeFromJson, firstDepictionOfClass, resourceDataPipeline
     )
 
 {-|
@@ -19,68 +13,64 @@ module Ginger.Resource exposing
 
 # Definitions
 
-@docs ResourceWith
-
-@docs Edges
+@docs ResourceData
 @docs Edge
-@docs Resource
-@docs Block
-@docs BlockType
+@docs CategoryList
+@docs ResourceDataConstructor
 
 
 # Access data
 
 @docs getCategory
 @docs getCategories
-@docs getDepiction
-@docs getDepictions
+@docs firstDepictionOfClass
+@docs depictionsOfClass
 @docs objectsOfPredicate
 
 
 # Decode
 
-@docs fromJsonWithEdges
-@docs fromJsonWithoutEdges
+@docs resourceDataPipeline
+@docs edgeFromJson
+@docs categoryListFromJson
 
 -}
 
-import Ginger.Category as Category exposing (Category(..))
 import Ginger.Id as Id exposing (ResourceId)
 import Ginger.Media as Media exposing (Media)
-import Ginger.Predicate as Predicate exposing (Predicate(..))
 import Ginger.Translation as Translation exposing (Translation)
 import Iso8601
-import Json.Decode as Decode
+import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline as Pipeline
-import List.NonEmpty exposing (NonEmpty)
 import Time
 
 
+{-| Standard Ginger Resource data
 
--- DEFINITIONS
+Fields that often have different types between sites are omitted, so sites can add them themselves
+by letting this record extend a record that contains the fields.
 
+It is recommended to have a separate record for the `edges` field, because it is useful to know at compile time whether a resource's edges have been fetched or not.
+For example, you could have:
 
-{-| An Elm representation of a Ginger resource.
+    type alias Resource =
+        SiteData (ResourceData Edges)
 
-Note the `a` in the record definition, this an extensible record.
-This means it includes _at least_ all of these fields but may have others
-as well. This lets us reason about whether the edges are included in the data,
-compile time. The Ginger REST API includes edges nested only one level deep,
-but since the edges are also resources we can re-use this datatype like
-`ResourceWith {}`. This tells use there are _no_ other fields besides the ones here.
+    type alias DisconnectedResource =
+        SiteData (ResourceData {})
 
-So you'll see this used in function signatures like:
+    type alias SiteData a =
+        { a
+            | categories : CategoryList Category
+            , blocks : List Block
+        }
 
-    ResourceWith Edges -- has edges
-
-    ResourceWith {} -- does not have the edges
-
-    ResourceWith a -- might have them but the code that's using this doesn't really care
-
-_Note: the `ResourceWith {}` might actually have edges, they are just not fetched._
+    type alias Edges =
+        { edges : List (Edge Predicate DisconnectedResource)
+        }
 
 -}
-type alias ResourceWith a =
+type alias ResourceData a =
     { a
         | id : ResourceId
         , title : Translation
@@ -88,67 +78,23 @@ type alias ResourceWith a =
         , subtitle : Translation
         , summary : Translation
         , path : String
-        , category : NonEmpty Category
         , name : Maybe String
-        , properties : Decode.Value
         , publicationDate : Maybe Time.Posix
         , media : Media
-        , blocks : List Block
+        , properties : Decode.Value
     }
 
-
-{-| The record we use to extend `ResourceWith a`.
-
-You can render a list of resource depictions like so:
-
-    viewDepictions : ResourceWith Edges -> List (Html msg)
-    viewDepictions resource =
-        List.map viewImage <|
-            depictions Media.Medium resource
-
-This next example won't compile because you need a `ResourceWith Edges`
-and this signature indicates they are missing.
-
-    viewDepictions : ResourceWith {} -> List (Html msg)
-    viewDepictions resource =
-        List.map viewImage <|
-            depictions Media.Medium resource
-
--}
-type alias Edges =
-    { edges : List Edge }
-
-
-{-| A connection to a resource named by `Predicate`
--}
-type alias Edge =
-    { predicate : Predicate
-    , resource : ResourceWith {}
+{-| A "trail" of categories from a leaf to the root -}
+type alias CategoryList category =
+    { leaf : category
+    , parents : List category
     }
 
-
-{-| Alias for `ResourceWith Edges`
--}
-type alias Resource =
-    ResourceWith Edges
-
-
-{-| -}
-type alias Block =
-    { body : Translation
-    , name : String
-    , type_ : BlockType
-    , relatedRscId : Maybe ResourceId
-    , properties : Decode.Value
+{-| An edge to a different resource via a specific predicate -}
+type alias Edge predicate resource =
+    { predicate : predicate
+    , resource : resource
     }
-
-
-{-| -}
-type BlockType
-    = Text
-    | Header
-    | Page
-    | Custom String
 
 
 
@@ -156,173 +102,131 @@ type BlockType
 
 
 {-| Return all resources with a given predicate.
-
-The returned resources won't have any edges themselves, indicated by the `{}`
-in `ResourceWith {}`.
-
 -}
-objectsOfPredicate : Predicate -> { a | edges : List Edge } -> List (ResourceWith {})
+objectsOfPredicate : predicate -> { a | edges : List (Edge predicate resource) } -> List resource
 objectsOfPredicate predicate resource =
     List.map .resource <|
         List.filter ((==) predicate << .predicate) resource.edges
 
 
-{-| Get the category of a `ResourceWith`.
+{-| Get the category of a resource.
 
 Every resource has a category, and that category can be part of a category tree.
 For instance, the `news` category belongs to the category tree `text > news`.
-This function will return only the category stored with the `ResourceWith`,
+This function will return only the leaf category,
 so in this case `news`, but not its parent `text`.
 
 -}
-getCategory : ResourceWith a -> Category
+getCategory : { a | category : CategoryList category } -> category
 getCategory =
-    List.NonEmpty.head << .category
+    .leaf << .category
 
 
-{-| Get the entire category tree of a `ResourceWith` starting from the parent
-category and ending with the smallest child. For example, in the case of a
+{-| Get all the categories of the resource, starting from the parent
+category and ending with the leaf. For example, in the case of a
 `news` resource, it will return [`text`, `news`].
 -}
-getCategories : ResourceWith a -> List Category
-getCategories =
-    List.reverse << List.NonEmpty.toList << .category
+getCategories : { a | category : CategoryList category } -> List category
+getCategories resource =
+    List.reverse (resource.category.leaf :: resource.category.parents)
 
 
-{-| The image url of the `ResourceWith` depiction.
+{-| The image url of the resource's depiction.
 
 Returns the image url if there is a depiction _and_ the mediaclass exists.
 
 -}
-getDepiction : Media.MediaClass -> ResourceWith Edges -> Maybe String
-getDepiction mediaClass =
-    List.head << getDepictions mediaClass
+firstDepictionOfClass : Media.MediaClass -> List (ResourceData a) -> Maybe String
+firstDepictionOfClass mediaClass =
+    List.head << depictionsOfClass mediaClass
 
 
-{-| The image urls of the `ResourceWith` depictions
+{-| The image urls of the resource's depictions
 
 Returns a list of image urls if there is a depiction _and_ the mediaclass exists.
 
 -}
-getDepictions : Media.MediaClass -> ResourceWith Edges -> List String
-getDepictions mediaClass resource =
-    List.filterMap (Media.imageUrl mediaClass << .media) <|
-        objectsOfPredicate Predicate.HasDepiction resource
+depictionsOfClass : Media.MediaClass -> List (ResourceData a) -> List String
+depictionsOfClass mediaClass =
+    List.filterMap (Media.imageUrl mediaClass << .media)
 
 
 
 -- DECODE
 
+{-| The type for a function that can be used to construct an actual resource.
 
-{-| Decode a `ResourceWith` that has edges.
--}
-fromJsonWithEdges : Decode.Decoder (ResourceWith Edges)
-fromJsonWithEdges =
+For example:
+
+resourceFromJson : Decode.Decoder (ResourceData { category : CategoryList Category })
+resourceFromJson =
     let
-        resourceWithEdges a b c d e f g h i j k l m =
+        resourceConstructor a b c d e f g h i j k =
             { id = a
             , title = b
             , body = c
             , subtitle = d
             , summary = e
             , path = f
-            , category = g
-            , properties = h
-            , publicationDate = i
-            , media = j
-            , blocks = k
-            , edges = l
-            , name = m
+            , name = g
+            , publicationDate = h
+            , media = i
+            , properties = j
+            , category = k
             }
     in
-    Decode.succeed resourceWithEdges
-        |> Pipeline.required "id" Id.fromJson
-        |> Pipeline.required "title" Translation.fromJson
-        |> Pipeline.required "body" Translation.fromJson
-        |> Pipeline.required "subtitle" Translation.fromJson
-        |> Pipeline.required "summary" Translation.fromJson
-        |> Pipeline.required "path" Decode.string
-        |> Pipeline.required "categories" Category.fromJson
-        |> Pipeline.required "properties" Decode.value
-        |> Pipeline.required "publication_date" (Decode.maybe Iso8601.decoder)
-        |> Pipeline.optional "media" Media.fromJson Media.empty
-        |> Pipeline.required "blocks" (Decode.list decodeBlock)
-        |> Pipeline.optional "edges" decodeEdges []
-        |> Pipeline.optional "name" (Decode.map Just Decode.string) Nothing
+    Decode.succeed resourceConstructor
+        |> Resource.resourceDataPipeline
+        |> Pipeline.required "categories" (Resource.categoryListFromJson Category.fromJson)
+ -}
+type alias ResourceDataConstructor a =
+    ResourceId
+    -> Translation
+    -> Translation
+    -> Translation
+    -> Translation
+    -> String
+    -> Maybe String
+    -> Maybe Time.Posix
+    -> Media
+    -> Decode.Value
+    -> a
 
-
-{-| Decode a `ResourceWith` that does not have edges.
+{-| A decoding pipeline for standard resource data.
+See `ResourceDataConstructor` for a usage example.
 -}
-fromJsonWithoutEdges : Decode.Decoder (ResourceWith {})
-fromJsonWithoutEdges =
-    let
-        resourceWithoutEdges a b c d e f g h i j k l =
-            { id = a
-            , title = b
-            , body = c
-            , subtitle = d
-            , summary = e
-            , path = f
-            , category = g
-            , properties = h
-            , publicationDate = i
-            , media = j
-            , blocks = k
-            , name = l
-            }
-    in
-    Decode.succeed resourceWithoutEdges
-        |> Pipeline.required "id" Id.fromJson
-        |> Pipeline.required "title" Translation.fromJson
-        |> Pipeline.required "body" Translation.fromJson
-        |> Pipeline.required "subtitle" Translation.fromJson
-        |> Pipeline.required "summary" Translation.fromJson
-        |> Pipeline.required "path" Decode.string
-        |> Pipeline.required "categories" Category.fromJson
-        |> Pipeline.required "properties" Decode.value
-        |> Pipeline.required "publication_date" (Decode.maybe Iso8601.decoder)
-        |> Pipeline.optional "media" Media.fromJson Media.empty
-        |> Pipeline.required "blocks" (Decode.list decodeBlock)
-        |> Pipeline.optional "name" (Decode.map Just Decode.string) Nothing
+resourceDataPipeline : Decoder (ResourceDataConstructor a) -> Decoder a
+resourceDataPipeline =
+    Pipeline.required "id" Id.fromJson
+        >> Pipeline.required "title" Translation.fromJson
+        >> Pipeline.required "body" Translation.fromJson
+        >> Pipeline.required "subtitle" Translation.fromJson
+        >> Pipeline.required "summary" Translation.fromJson
+        >> Pipeline.required "path" Decode.string
+        >> Pipeline.optional "name" (Decode.map Just Decode.string) Nothing
+        >> Pipeline.required "publication_date" (Decode.maybe Iso8601.decoder)
+        >> Pipeline.optional "media" Media.fromJson Media.empty
+        >> Pipeline.required "properties" Decode.value
+
+{-| -}
+categoryListFromJson : Decoder category -> Decoder (CategoryList category)
+categoryListFromJson categoryFromJson =
+    Decode.list categoryFromJson
+        |> Decode.andThen checkCategoryList
 
 
-decodeEdges : Decode.Decoder (List Edge)
-decodeEdges =
-    Decode.list decodeEdge
+checkCategoryList : List category -> Decoder (CategoryList category)
+checkCategoryList list =
+    case List.reverse list of
+        [] ->
+            Decode.fail "An array with one or more elements."
 
+        x :: xs ->
+            Decode.succeed { leaf = x, parents = xs }
 
-decodeEdge : Decode.Decoder Edge
-decodeEdge =
+{-| -}
+edgeFromJson : Decoder predicate -> Decoder resource -> Decoder (Edge predicate resource)
+edgeFromJson predicateFromJson resourceFromJson =
     Decode.succeed Edge
-        |> Pipeline.required "predicate_name" Predicate.fromJson
-        |> Pipeline.required "resource" fromJsonWithoutEdges
-
-
-decodeBlock : Decode.Decoder Block
-decodeBlock =
-    Decode.succeed Block
-        |> Pipeline.required "body" Translation.fromJson
-        |> Pipeline.required "name" Decode.string
-        |> Pipeline.required "type" decodeBlockType
-        |> Pipeline.required "rsc_id" (Decode.maybe Id.fromJson)
-        |> Pipeline.required "properties" Decode.value
-
-
-decodeBlockType : Decode.Decoder BlockType
-decodeBlockType =
-    let
-        toBlockType type_ =
-            case type_ of
-                "page" ->
-                    Page
-
-                "text" ->
-                    Text
-
-                "header" ->
-                    Header
-
-                other ->
-                    Custom other
-    in
-    Decode.map toBlockType Decode.string
+        |> Pipeline.required "predicate_name" predicateFromJson
+        |> Pipeline.required "resource" resourceFromJson
