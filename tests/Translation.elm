@@ -62,20 +62,24 @@ suite =
                     |> Query.has [ text "Hallo" ]
         , test "Is empty Translation" <|
             \_ ->
-                Expect.true "Expected the String to be empty" <|
-                    Translation.isEmpty NL (Translation.fromList [])
+                Translation.isEmpty NL (Translation.fromList [])
+                    |> Expect.equal True
+                    |> Expect.onFail "Expected the String to be empty"
         , test "Is empty Translation with empty string" <|
             \_ ->
-                Expect.true "Expected the String to be empty" <|
-                    Translation.isEmpty NL (Translation.fromList [ ( NL, "" ) ])
+                Translation.isEmpty NL (Translation.fromList [ ( NL, "" ) ])
+                    |> Expect.equal True
+                    |> Expect.onFail "Expected the String to be empty"
         , test "Is non empty Translation" <|
             \_ ->
-                Expect.false "Expected the String to be non empty" <|
-                    Translation.isEmpty NL (Translation.fromList [ ( NL, "fire" ) ])
+                Translation.isEmpty NL (Translation.fromList [ ( NL, "fire" ) ])
+                    |> Expect.equal False
+                    |> Expect.onFail "Expected the String to be non empty"
         , test "Is not empty Translation" <|
             \_ ->
-                Expect.false "Expected the String to not be empty" <|
-                    Translation.isEmpty NL translation
+                Translation.isEmpty NL translation
+                    |> Expect.equal False
+                    |> Expect.onFail "Expected the String to be non empty"
         , test "Renders a Dutch text as html" <|
             \_ ->
                 Html.article [] [ Translation.textNL translation ]

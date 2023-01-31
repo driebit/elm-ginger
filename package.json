@@ -3,8 +3,8 @@
         "test": "elm-format --validate src && elm-test"
     },
     "dependencies": {
-        "elm": "0.19.0-bugfix6",
+        "elm": "^0.19.1-5",
         "elm-format": "^0.8.1",
-        "elm-test": "^0.19.0"
+        "elm-test": "^0.19.1-revision11"
     }
 }
