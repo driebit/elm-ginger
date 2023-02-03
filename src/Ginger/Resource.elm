@@ -1,11 +1,16 @@
 module Ginger.Resource exposing
     ( ResourceData
     , Edge
+    , CategoryList
+    , ResourceDataConstructor
     , getCategory
     , getCategories
+    , firstDepictionOfClass
+    , depictionsOfClass
     , objectsOfPredicate
+    , resourceDataPipeline
+    , edgeFromJson
     , categoryListFromJson
-    , CategoryList, ResourceDataConstructor, depictionsOfClass, edgeFromJson, firstDepictionOfClass, resourceDataPipeline
     )
 
 {-|
@@ -84,13 +89,17 @@ type alias ResourceData a =
         , properties : Decode.Value
     }
 
-{-| A "trail" of categories from a leaf to the root -}
+
+{-| A "trail" of categories from a leaf to the root
+-}
 type alias CategoryList category =
     { leaf : category
     , parents : List category
     }
 
-{-| An edge to a different resource via a specific predicate -}
+
+{-| An edge to a different resource via a specific predicate
+-}
 type alias Edge predicate resource =
     { predicate : predicate
     , resource : resource
@@ -154,31 +163,33 @@ depictionsOfClass mediaClass =
 
 -- DECODE
 
+
 {-| The type for a function that can be used to construct an actual resource.
 
 For example:
 
-resourceFromJson : Decode.Decoder (ResourceData { category : CategoryList Category })
-resourceFromJson =
-    let
-        resourceConstructor a b c d e f g h i j k =
-            { id = a
-            , title = b
-            , body = c
-            , subtitle = d
-            , summary = e
-            , path = f
-            , name = g
-            , publicationDate = h
-            , media = i
-            , properties = j
-            , category = k
-            }
-    in
-    Decode.succeed resourceConstructor
-        |> Resource.resourceDataPipeline
-        |> Pipeline.required "categories" (Resource.categoryListFromJson Category.fromJson)
- -}
+    resourceFromJson : Decode.Decoder (ResourceData { category : CategoryList Category })
+    resourceFromJson =
+        let
+            resourceConstructor a b c d e f g h i j k =
+                { id = a
+                , title = b
+                , body = c
+                , subtitle = d
+                , summary = e
+                , path = f
+                , name = g
+                , publicationDate = h
+                , media = i
+                , properties = j
+                , category = k
+                }
+        in
+        Decode.succeed resourceConstructor
+            |> Resource.resourceDataPipeline
+            |> Pipeline.required "categories" (Resource.categoryListFromJson Category.fromJson)
+
+-}
 type alias ResourceDataConstructor a =
     ResourceId
     -> Translation
@@ -191,6 +202,7 @@ type alias ResourceDataConstructor a =
     -> Media
     -> Decode.Value
     -> a
+
 
 {-| A decoding pipeline for standard resource data.
 See `ResourceDataConstructor` for a usage example.
@@ -208,6 +220,7 @@ resourceDataPipeline =
         >> Pipeline.optional "media" Media.fromJson Media.empty
         >> Pipeline.required "properties" Decode.value
 
+
 {-| -}
 categoryListFromJson : Decoder category -> Decoder (CategoryList category)
 categoryListFromJson categoryFromJson =
@@ -223,6 +236,7 @@ checkCategoryList list =
 
         x :: xs ->
             Decode.succeed { leaf = x, parents = xs }
+
 
 {-| -}
 edgeFromJson : Decoder predicate -> Decoder resource -> Decoder (Edge predicate resource)
