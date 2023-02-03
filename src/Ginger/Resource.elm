@@ -5,8 +5,8 @@ module Ginger.Resource exposing
     , ResourceDataConstructor
     , getCategory
     , getCategories
-    , firstDepictionOfClass
-    , depictionsOfClass
+    , firstDepictionOfMediaClass
+    , depictionsOfMediaClass
     , objectsOfPredicate
     , resourceDataPipeline
     , edgeFromJson
@@ -145,9 +145,9 @@ getCategories resource =
 Returns the image url if there is a depiction _and_ the mediaclass exists.
 
 -}
-firstDepictionOfClass : Media.MediaClass -> List (ResourceData a) -> Maybe String
-firstDepictionOfClass mediaClass =
-    List.head << depictionsOfClass mediaClass
+firstDepictionOfMediaClass : Media.MediaClass -> List (ResourceData a) -> Maybe String
+firstDepictionOfMediaClass mediaClass =
+    List.head << depictionsOfMediaClass mediaClass
 
 
 {-| The image urls of the resource's depictions
@@ -155,8 +155,8 @@ firstDepictionOfClass mediaClass =
 Returns a list of image urls if there is a depiction _and_ the mediaclass exists.
 
 -}
-depictionsOfClass : Media.MediaClass -> List (ResourceData a) -> List String
-depictionsOfClass mediaClass =
+depictionsOfMediaClass : Media.MediaClass -> List (ResourceData a) -> List String
+depictionsOfMediaClass mediaClass =
     List.filterMap (Media.imageUrl mediaClass << .media)
 
 
