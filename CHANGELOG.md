@@ -1,5 +1,8 @@
 # Changelog
 
+# v5.0.0
+* Add decoding for a resource's unique name
+
 # v4.1.1
 * Add extra check to `Translation.isEmpty`
 

@@ -89,6 +89,7 @@ type alias ResourceWith a =
         , summary : Translation
         , path : String
         , category : NonEmpty Category
+        , name : Maybe String
         , properties : Decode.Value
         , publicationDate : Maybe Time.Posix
         , media : Media
@@ -218,7 +219,7 @@ getDepictions mediaClass resource =
 fromJsonWithEdges : Decode.Decoder (ResourceWith Edges)
 fromJsonWithEdges =
     let
-        resourceWithEdges a b c d e f g h i j k l =
+        resourceWithEdges a b c d e f g h i j k l m =
             { id = a
             , title = b
             , body = c
@@ -231,6 +232,7 @@ fromJsonWithEdges =
             , media = j
             , blocks = k
             , edges = l
+            , name = m
             }
     in
     Decode.succeed resourceWithEdges
@@ -246,6 +248,7 @@ fromJsonWithEdges =
         |> Pipeline.optional "media" Media.fromJson Media.empty
         |> Pipeline.required "blocks" (Decode.list decodeBlock)
         |> Pipeline.optional "edges" decodeEdges []
+        |> Pipeline.optional "name" (Decode.map Just Decode.string) Nothing
 
 
 {-| Decode a `ResourceWith` that does not have edges.
@@ -253,7 +256,7 @@ fromJsonWithEdges =
 fromJsonWithoutEdges : Decode.Decoder (ResourceWith {})
 fromJsonWithoutEdges =
     let
-        resourceWithoutEdges a b c d e f g h i j k =
+        resourceWithoutEdges a b c d e f g h i j k l =
             { id = a
             , title = b
             , body = c
@@ -265,6 +268,7 @@ fromJsonWithoutEdges =
             , publicationDate = i
             , media = j
             , blocks = k
+            , name = l
             }
     in
     Decode.succeed resourceWithoutEdges
@@ -279,6 +283,7 @@ fromJsonWithoutEdges =
         |> Pipeline.required "publication_date" (Decode.maybe Iso8601.decoder)
         |> Pipeline.optional "media" Media.fromJson Media.empty
         |> Pipeline.required "blocks" (Decode.list decodeBlock)
+        |> Pipeline.optional "name" (Decode.map Just Decode.string) Nothing
 
 
 decodeEdges : Decode.Decoder (List Edge)
