@@ -26,7 +26,7 @@ module Ginger.Category exposing
 -}
 
 import Json.Decode as Decode
-import List.NonEmpty exposing (NonEmpty)
+import Json.Decode.Extra as Decode
 
 
 
@@ -51,7 +51,6 @@ type Category
     | Text
     | Video
     | Website
-    | Custom String
 
 
 
@@ -59,66 +58,33 @@ type Category
 
 
 {-| -}
-fromJson : Decode.Decoder (NonEmpty Category)
+fromJson : Decode.Decoder Category
 fromJson =
-    Decode.map (List.NonEmpty.reverse << List.NonEmpty.map fromString) <|
-        List.NonEmpty.fromJson Decode.string
+    Decode.oneOf <|
+        [ Decode.constant Text "text"
+        , Decode.constant Person "person"
+        , Decode.constant Location "location"
+        , Decode.constant Website "website"
+        , Decode.constant Event "event"
+        , Decode.constant Artifact "artifact"
+        , Decode.constant Media "media"
+        , Decode.constant Image "image"
+        , Decode.constant Video "video"
+        , Decode.constant Audio "audio"
+        , Decode.constant Document "document"
+        , Decode.constant Collection "collection"
+        , Decode.constant Meta "meta"
+        , Decode.constant Agenda "agenda"
+        , Decode.constant Article "article"
+        , Decode.constant News "news"
+        ]
 
 
 {-| -}
-fromString : String -> Category
-fromString category =
-    case category of
-        "text" ->
-            Text
-
-        "person" ->
-            Person
-
-        "location" ->
-            Location
-
-        "website" ->
-            Website
-
-        "event" ->
-            Event
-
-        "artifact" ->
-            Artifact
-
-        "media" ->
-            Media
-
-        "image" ->
-            Image
-
-        "video" ->
-            Video
-
-        "audio" ->
-            Audio
-
-        "document" ->
-            Document
-
-        "collection" ->
-            Collection
-
-        "meta" ->
-            Meta
-
-        "agenda" ->
-            Agenda
-
-        "article" ->
-            Article
-
-        "news" ->
-            News
-
-        custom ->
-            Custom custom
+fromString : String -> Maybe Category
+fromString =
+    Result.toMaybe
+        << Decode.decodeString fromJson
 
 
 {-| -}
@@ -172,6 +138,3 @@ toString category =
 
         News ->
             "news"
-
-        Custom custom ->
-            custom

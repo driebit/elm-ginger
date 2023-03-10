@@ -64,11 +64,10 @@ import File exposing (File)
 import Ginger.Category as Category exposing (Category)
 import Ginger.Id as Id exposing (ResourceId)
 import Ginger.Predicate as Predicate exposing (Predicate)
-import Ginger.Resource as Resource exposing (Edges, ResourceWith)
 import Ginger.Resource.Extra as Extra exposing (Location)
 import Http
 import Internal.Request as Request
-import Json.Decode as Decode
+import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline as Pipeline
 import Json.Encode as Encode
 import Task exposing (Task)
@@ -103,31 +102,43 @@ absolute path queryParams =
 
 {-| Request a resource by `ResourceId`
 -}
-resourceById : (Result Http.Error (ResourceWith Edges) -> msg) -> ResourceId -> Cmd msg
-resourceById msg id =
+resourceById :
+    Decoder resource
+    -> (Result Http.Error resource -> msg)
+    -> ResourceId
+    -> Cmd msg
+resourceById resourceFromJson msg id =
     Http.get
         { url = absolute [ Id.toString id ] []
-        , expect = Http.expectJson msg Resource.fromJsonWithEdges
+        , expect = Http.expectJson msg resourceFromJson
         }
 
 
 {-| Request a resource by its `page_path`
 -}
-resourceByPath : (Result Http.Error (ResourceWith Edges) -> msg) -> String -> Cmd msg
-resourceByPath msg path =
+resourceByPath :
+    Decoder resource
+    -> (Result Http.Error resource -> msg)
+    -> String
+    -> Cmd msg
+resourceByPath resourceFromJson msg path =
     Http.get
         { url = absolute [ "path", Url.percentEncode path ] []
-        , expect = Http.expectJson msg Resource.fromJsonWithEdges
+        , expect = Http.expectJson msg resourceFromJson
         }
 
 
 {-| Request a resource by its unique name
 -}
-resourceByName : (Result Http.Error (ResourceWith Edges) -> msg) -> String -> Cmd msg
-resourceByName msg id =
+resourceByName :
+    Decoder resource
+    -> (Result Http.Error resource -> msg)
+    -> String
+    -> Cmd msg
+resourceByName resourceFromJson msg id =
     Http.get
         { url = absolute [ id ] []
-        , expect = Http.expectJson msg Resource.fromJsonWithEdges
+        , expect = Http.expectJson msg resourceFromJson
         }
 
 
@@ -141,17 +152,18 @@ resourceByName msg id =
 
 -}
 search :
-    (Result Http.Error (SearchResult (ResourceWith Edges)) -> msg)
+    Decoder resource
+    -> (Result Http.Error (SearchResult resource) -> msg)
     -> List QueryParam
     -> Cmd msg
-search msg queryParams =
+search resourceFromJson msg queryParams =
     Http.get
         { url =
             Url.Builder.absolute [ "data", "search" ] <|
                 queryParamsToBuilder queryParams
         , expect =
             Http.expectJson msg <|
-                fromJson (Decode.list Resource.fromJsonWithEdges)
+                fromJson (Decode.list resourceFromJson)
         }
 
 
@@ -206,14 +218,15 @@ uploadFileAndPostEdge :
     { from : ResourceId
     , predicate : Predicate
     , file : File
+    , resourceFromJson : Decoder resource
     }
-    -> Task Http.Error (ResourceWith Edges)
-uploadFileAndPostEdge { from, file, predicate } =
+    -> Task Http.Error resource
+uploadFileAndPostEdge { from, file, predicate, resourceFromJson } =
     let
         get id =
             Request.getTask
                 (Url.Builder.absolute [ "data", "resources", Id.toString id ] [])
-                Resource.fromJsonWithEdges
+                resourceFromJson
 
         post fileId =
             Task.map2 (\a _ -> a)
