@@ -34,9 +34,8 @@ module Ginger.Resource.Extra exposing
 -}
 
 import Ginger.Id exposing (ResourceId)
-import Ginger.Predicate as Predicate
-import Ginger.Resource as Resource exposing (Edges, ResourceWith)
-import Ginger.Translation as Translation exposing (Language(..))
+import Ginger.Resource as Resource exposing (Edge, ResourceData)
+import Ginger.Translation exposing (Language(..))
 import Iso8601
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
@@ -53,16 +52,16 @@ type alias AuthorName =
 
 
 {-| -}
-authorName : ResourceWith Edges -> Maybe AuthorName
-authorName resource =
+authorName : predicate -> { a | edges : List (Edge predicate (ResourceData b)) } -> Maybe AuthorName
+authorName hasAuthor resource =
     let
-        fromProperties edge =
+        fromProperties author =
             Result.toMaybe <|
-                Decode.decodeValue authorNameFromJson edge.properties
+                Decode.decodeValue authorNameFromJson author.properties
     in
     Maybe.andThen fromProperties <|
         List.head <|
-            Resource.objectsOfPredicate Predicate.HasAuthor resource
+            Resource.objectsOfPredicate hasAuthor resource
 
 
 {-| -}
@@ -83,11 +82,10 @@ type alias EventDate =
 
 
 {-| -}
-eventDate : ResourceWith a -> Maybe EventDate
+eventDate : ResourceData a -> Maybe EventDate
 eventDate resource =
     Result.toMaybe <|
-        Decode.decodeValue eventDateFromJson
-            resource.properties
+        Decode.decodeValue eventDateFromJson resource.properties
 
 
 {-| -}

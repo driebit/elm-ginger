@@ -12,9 +12,9 @@ Create Elm websites backed by the [Ginger CMS](https://github.com/driebit/ginger
 
 **Ginger.Id**: A tagged version of a Ginger resource id.
 
-**Ginger.Category**: Ginger categories with option to define a custom one.
+**Ginger.Category**: Ginger categories.
 
-**Ginger.Predicate**: Ginger predicates with option to define a custom one.
+**Ginger.Predicate**: Ginger predicates.
 
 **Ginger.Translation**: Translate text and markup.
 
